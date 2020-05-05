@@ -1,0 +1,244 @@
+databaseChangeLog:
+  - logicalFilePath: db/changelog/db.changelog-master.yaml
+  - changeSet:
+      id: 1
+      author: master
+      changes:
+        - createTable:
+            tableName: captcha_codes
+            columns:
+              - column:
+                  name: id
+                  type: int(11)
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: time
+                  type: datetime
+                  constraints:
+                    nullable: false
+              - column:
+                  name: code
+                  type: tinytext
+                  constraints:
+                    nullable: false
+              - column:
+                  name: secret_code
+                  type: tinytext
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: global_settings
+            columns:
+              - column:
+                  name: id
+                  type: int(11)
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: code
+                  type: varchar (255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar (255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: value
+                  type: varchar (255)
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: post_comments
+            columns:
+              - column:
+                  name: id
+                  type: int (11)
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: parent_id
+                  type: int (11)
+              - column:
+                  name: post_id
+                  type: int (11)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: int (11)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: time
+                  type: datetime
+                  constraints:
+                    nullable: false
+              - column:
+                  name: text
+                  type: text
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: posts
+            columns:
+              - column:
+                  name: id
+                  type: int (11)
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: is_active
+                  type: tinyint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: moderation_status
+                  type: enum ("NEW", "ACCEPTED", "DECLINED")
+                  constraints:
+                    nullable: false
+              - column:
+                  name: moderator_id
+                  type: int (11)
+              - column:
+                  name: user_id
+                  type: int (11)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: time
+                  type: datetime
+                  constraints:
+                    nullable: false
+              - column:
+                  name: title
+                  type: varchar (255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: text
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: view_count
+                  type: int
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: posts_votes
+            columns:
+              - column:
+                  name: id
+                  type: int (11)
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: int (11)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: post_id
+                  type: int (11)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: time
+                  type: datetime
+                  constraints:
+                    nullable: false
+              - column:
+                  name: value
+                  type: tinyint
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: tag2post
+            columns:
+              - column:
+                  name: id
+                  type: int (11)
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: post_id
+                  type: int (11)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: tag_id
+                  type: int (11)
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: tags
+            columns:
+              - column:
+                  name: id
+                  type: int (11)
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar (255)
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  type: int (11)
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: is_moderator
+                  type: tinyint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: reg_time
+                  type: datetime
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar (255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: email
+                  type: varchar (255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: password
+                  type: varchar (255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: code
+                  type: varchar (255)
+              - column:
+                  name: photo
+                  type: text
+
