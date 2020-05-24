@@ -1,0 +1,1 @@
+insert into posts(is_active, moderation_status, moderator_id, user_id, time, title, text, view_count) VALUES (1, 'ACCEPTED', 2, 1, now(), 'testTitle', 'testText', 5)
