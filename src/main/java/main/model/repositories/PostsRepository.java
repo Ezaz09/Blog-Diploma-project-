@@ -1,39 +1,37 @@
 package main.model.repositories;
 
 import main.api.responses.PostsResponse;
-import main.model.Posts;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
+
 
 import java.util.List;
-//WHERE is_active = 1 AND moderation_status = 'ACCEPTED'
+
 @Repository
-public interface PostsRepository extends JpaRepository<Posts, Integer> {
-    @Query(value = "SELECT\n" +
-            "    p.id AS id,\n" +
-            "    p.time AS time,\n" +
-            "    p.user_id AS user,\n" +
-            "    p.title AS title,\n" +
-            "    p.title AS announce,\n" +
-            "    sum(CASE\n" +
-            "        WHEN p_votes.value = 1 THEN p_votes.value\n" +
-            "    END) AS likeCount,\n" +
-            "    sum(CASE\n" +
-            "        WHEN p_votes.value = - 1 THEN p_votes.value\n" +
-            "    END) AS dislikeCount,\n" +
-            "    0 AS commentCount,\n" +
-            "    p.view_count AS viewCount\n" +
-            "FROM\n" +
-            "    posts AS p\n" +
-            "        LEFT JOIN\n" +
-            "    posts_votes AS p_votes ON p.id = p_votes.post_id\n" +
-            "WHERE\n" +
-            "    is_active = 1\n" +
-            "        AND moderation_status = 'ACCEPTED'", nativeQuery = true)
+public interface PostsRepository extends JpaRepository<PostsResponse, Integer> {
+    @Query(value = "select " +
+            "posts.id, " +
+            "posts.time, " +
+            "posts.title, " +
+            "posts.user_id, " +
+            "SUM( CASE " +
+            "   WHEN pVotes.value = 1 THEN pVotes.value " +
+            "   ELSE 0 " +
+            " END) as like_count, " +
+            "SUM( CASE " +
+            "   WHEN pVotes.value = -1 THEN pVotes.value " +
+            "   ELSE 0 " +
+            " END) as dislike_count, " +
+            "posts.view_count as view_count," +
+            "COUNT(pComments.id) as comment_count " +
+            "FROM posts as posts " +
+            "JOIN posts_votes as pVotes ON pVotes.post_id = posts.id " +
+            "JOIN post_comments as pComments ON pComments.post_id = posts.id " +
+            "WHERE posts.is_active = 1 " +
+            "AND posts.moderation_status = 'ACCEPTED' " +
+            "LIMIT :limit OFFSET :offset", nativeQuery = true)
     List<PostsResponse> getAllPosts(
             @Param("offset") int offset,
             @Param("limit") int limit);
