@@ -1,19 +1,18 @@
 package main.api.responses;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
+import lombok.*;
 
 import javax.persistence.*;
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PostsResponse {
-
+@Getter
+@Setter
+public class CertainPostResponse {
     @Id
     @NonNull
     private int id;
@@ -26,7 +25,7 @@ public class PostsResponse {
 
     private String title;
 
-   // private String announce;
+    // private String announce;
 
     @Column(name="like_count")
     private int likeCount;
@@ -40,4 +39,7 @@ public class PostsResponse {
     @Column(name="view_count")
     private int viewCount;
 
+    @OneToMany
+    @JoinColumn(name="id", referencedColumnName ="id", insertable = false, updatable = false)
+    private List<CommentsResponse> comments;
 }
