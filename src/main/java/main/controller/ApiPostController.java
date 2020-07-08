@@ -34,7 +34,7 @@ public class ApiPostController {
     }
 
     @GetMapping(path = "/api/post/search/")
-    public ResponsePlatformApi somePosts(@RequestParam(defaultValue = "0") int offset,
+    public ResponsePlatformApi getSomePosts(@RequestParam(defaultValue = "0") int offset,
                                          @RequestParam(defaultValue = "20") int limit,
                                          @RequestParam String query)
     {
@@ -48,6 +48,10 @@ public class ApiPostController {
     {
         CertainPostResponse certainPostResponse = new CertainPostResponse();
         PostsResponse certainPost = postsService.getCertainPost(id);
+        if(certainPost == null)
+        {
+            return certainPostResponse;
+        }
         certainPostResponse.setId(certainPost.getId());
         certainPostResponse.setTime(certainPost.getTime());
         certainPostResponse.setUser(certainPost.getUser());
@@ -57,8 +61,21 @@ public class ApiPostController {
         certainPostResponse.setCommentCount(certainPost.getCommentCount());
         certainPostResponse.setViewCount(certainPost.getViewCount());
         List<CommentsResponse> allCommentsForCertainPost = commentsService.getAllCommentsForCertainPost(id);
-
+        if(allCommentsForCertainPost == null)
+        {
+            return certainPostResponse;
+        }
         certainPostResponse.setComments(allCommentsForCertainPost);
         return certainPostResponse;
+    }
+
+    @GetMapping(path = "/api/post/byDate/")
+    public ResponsePlatformApi getSomePostsByDate(@RequestParam(defaultValue = "0") int offset,
+                                         @RequestParam(defaultValue = "20") int limit,
+                                         @RequestParam String date)
+    {
+        List<PostsResponse> listOfPosts = postsService.getSomePostsByDate(offset, limit, date);
+        int total = listOfPosts.size();
+        return new ResponsePlatformApi(total,listOfPosts);
     }
 }

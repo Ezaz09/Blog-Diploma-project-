@@ -17,7 +17,7 @@ public interface PostsRepository extends JpaRepository<PostsResponse, Integer> {
             "posts.id as id, " +
             "DATE_FORMAT(posts.time, '%d-%c-%Y, %H-%i') as time_of_post, " +
             "posts.title, " +
-            "posts.user_id, " +
+            "posts.user_id as user_id, " +
             "SUM( CASE " +
             "   WHEN pVotes.value = 1 THEN pVotes.value " +
             "   ELSE 0 " +
@@ -47,9 +47,9 @@ public interface PostsRepository extends JpaRepository<PostsResponse, Integer> {
 
     @Query(value = "select " +
             "posts.id, " +
-            "DATE_FORMAT(posts.time, '%d-%c-%Y, %H-%i') as time, " +
+            "DATE_FORMAT(posts.time, '%d-%c-%Y, %H-%i') as time_of_post, " +
             "posts.title, " +
-            "posts.user_id, " +
+            "posts.user_id as user_id, " +
             "SUM( CASE " +
             "   WHEN pVotes.value = 1 THEN pVotes.value " +
             "   ELSE 0 " +
@@ -61,8 +61,8 @@ public interface PostsRepository extends JpaRepository<PostsResponse, Integer> {
             "posts.view_count as view_count," +
             "COUNT(pComments.id) as comment_count " +
             "FROM posts as posts " +
-            "JOIN posts_votes as pVotes ON pVotes.post_id = posts.id " +
-            "JOIN post_comments as pComments ON pComments.post_id = posts.id " +
+            "LEFT JOIN posts_votes as pVotes ON pVotes.post_id = posts.id " +
+            "LEFT JOIN post_comments as pComments ON pComments.post_id = posts.id " +
             "WHERE posts.is_active = 1 " +
             "AND posts.moderation_status = 'ACCEPTED' " +
             "AND posts.title LIKE :query " +
@@ -74,9 +74,9 @@ public interface PostsRepository extends JpaRepository<PostsResponse, Integer> {
 
     @Query(value = "select " +
             "posts.id, " +
-            "DATE_FORMAT(posts.time, '%d-%c-%Y, %H-%i') as time, " +
+            "DATE_FORMAT(posts.time, '%d-%c-%Y, %H-%i') as time_of_post, " +
             "posts.title, " +
-            "posts.user_id, " +
+            "posts.user_id as user_id, " +
             "SUM( CASE " +
             "   WHEN pVotes.value = 1 THEN pVotes.value " +
             "   ELSE 0 " +
@@ -88,13 +88,39 @@ public interface PostsRepository extends JpaRepository<PostsResponse, Integer> {
             "posts.view_count as view_count," +
             "COUNT(pComments.id) as comment_count " +
             "FROM posts as posts " +
-            "JOIN posts_votes as pVotes ON pVotes.post_id = posts.id " +
-            "JOIN post_comments as pComments ON pComments.post_id = posts.id " +
+            "LEFT JOIN posts_votes as pVotes ON pVotes.post_id = posts.id " +
+            "LEFT JOIN post_comments as pComments ON pComments.post_id = posts.id " +
             "WHERE posts.is_active = 1 " +
             "AND posts.moderation_status = 'ACCEPTED' " +
             "AND posts.id = :postId " +
-            "AND posts.time <= :currentTime", nativeQuery = true)
+            "AND posts.time <= NOW()", nativeQuery = true)
     PostsResponse getCertainPost(
-            @Param("postId") int postId,
-            @Param("currentTime") Date currentTime);
+            @Param("postId") int postId);
+
+    @Query(value = "select " +
+            "posts.id as id, " +
+            "DATE_FORMAT(posts.time, '%d-%c-%Y, %H-%i') as time_of_post, " +
+            "posts.title as title, " +
+            "posts.user_id as user_id, " +
+            "SUM( CASE " +
+            "   WHEN pVotes.value = 1 THEN pVotes.value " +
+            "   ELSE 0 " +
+            " END) as like_count, " +
+            "SUM( CASE " +
+            "   WHEN pVotes.value = -1 THEN pVotes.value " +
+            "   ELSE 0 " +
+            " END) as dislike_count, " +
+            "posts.view_count as view_count," +
+            "COUNT(pComments.id) as comment_count " +
+            "FROM posts as posts " +
+            "LEFT JOIN posts_votes as pVotes ON pVotes.post_id = posts.id " +
+            "LEFT JOIN post_comments as pComments ON pComments.post_id = posts.id " +
+            "WHERE posts.is_active = 1 " +
+            "AND posts.moderation_status = 'ACCEPTED' " +
+            "AND date_format(posts.time, '%Y-%c-%d') = date_format(:dateForSelection,'%Y-%c-%d') " +
+            "LIMIT :limit OFFSET :offset", nativeQuery = true)
+    List<PostsResponse> getSomePostsByDate(
+            @Param("offset") int offset,
+            @Param("limit") int limit,
+            @Param("dateForSelection") String dateForSelection);
 }

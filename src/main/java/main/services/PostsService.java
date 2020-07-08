@@ -34,6 +34,11 @@ public class PostsService {
 
     public PostsResponse getCertainPost(int postId)
     {
-        return postsRepository.getCertainPost(postId, new Date());
+        return postsRepository.getCertainPost(postId);
+    }
+
+    public List<PostsResponse> getSomePostsByDate(int offset, int limit, String dateForSelection)
+    {
+        return postsRepository.getSomePostsByDate(offset, limit, dateForSelection);
     }
 }

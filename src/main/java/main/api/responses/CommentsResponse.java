@@ -12,7 +12,6 @@ import java.time.LocalDate;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name="post_comments")
 public class CommentsResponse {
 
     @Id
@@ -24,7 +23,7 @@ public class CommentsResponse {
     private String text;
 
     @ManyToOne
-    @JoinColumn(name="id", referencedColumnName="id", insertable=false, updatable=false)
+    @JoinColumn(name="user_id", referencedColumnName="id", insertable=false, updatable=false)
     private UserResponse user;
 
 }

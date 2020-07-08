@@ -22,7 +22,7 @@ public class PostsResponse {
     private String time;
 
     @ManyToOne
-    @JoinColumn(name="id", referencedColumnName="id", insertable=false, updatable=false)
+    @JoinColumn(name="user_id", referencedColumnName="id", insertable=false, updatable=false)
     private UserResponse user;
 
     private String title;
