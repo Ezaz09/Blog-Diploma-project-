@@ -25,9 +25,10 @@ public class ApiPostController {
 
     @GetMapping(path = "/api/post/")
     public ResponsePlatformApi listOfPosts(@RequestParam(defaultValue = "0") int offset,
-                                           @RequestParam(defaultValue = "20") int limit)
+                                           @RequestParam(defaultValue = "20") int limit,
+                                           @RequestParam String mode)
     {
-        List<PostsResponse> listOfPosts = postsService.getPosts(offset,limit);
+        List<PostsResponse> listOfPosts = postsService.getPosts(offset,limit, mode);
         int total = listOfPosts.size();
         return new ResponsePlatformApi(total, listOfPosts);
     }

@@ -18,6 +18,7 @@ public class PostsResponse {
     @NonNull
     private int id;
 
+    @Column(name="time_of_post")
     private String time;
 
     @ManyToOne

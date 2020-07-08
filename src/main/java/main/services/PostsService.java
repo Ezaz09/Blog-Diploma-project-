@@ -22,9 +22,9 @@ public class PostsService {
         this.postsRepository = postsRepository;
     }
 
-    public List<PostsResponse> getPosts(int offset, int limit)
+    public List<PostsResponse> getPosts(int offset, int limit, String mode)
     {
-        return postsRepository.getAllPosts(offset, limit);
+        return postsRepository.getAllPosts(offset, limit, mode);
     }
 
     public List<PostsResponse> getSomePosts(int offset, int limit, String query)
