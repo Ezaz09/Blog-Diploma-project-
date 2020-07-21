@@ -10,9 +10,10 @@ import java.time.LocalDate;
 
 @Entity
 @Data
+@Table(name="posts")
 @NoArgsConstructor
 @AllArgsConstructor
-public class PostsResponse {
+public class PostsResponse{
 
     @Id
     @NonNull
@@ -22,7 +23,7 @@ public class PostsResponse {
     private String time;
 
     @ManyToOne
-    @JoinColumn(name="user_id", referencedColumnName="id", insertable=false, updatable=false)
+    @JoinColumn(name="user", referencedColumnName="id", insertable=false, updatable=false)
     private UserResponse user;
 
     private String title;

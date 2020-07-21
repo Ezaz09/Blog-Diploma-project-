@@ -1,6 +1,9 @@
 package main.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import main.model.enums.ModerationStatus;
 
 import javax.persistence.*;
@@ -9,7 +12,10 @@ import java.time.LocalDate;
 @Entity
 @Data
 @Table(name = "posts")
-public class Posts {
+@EqualsAndHashCode(callSuper = false)
+@AllArgsConstructor
+@NoArgsConstructor
+public class Posts{
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

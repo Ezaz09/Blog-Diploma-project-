@@ -6,6 +6,7 @@ import main.api.responses.PostsResponse;
 import main.api.responses.ResponsePlatformApi;
 import main.services.CommentsService;
 import main.services.PostsService;
+import main.services.PostsServiceHQL;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -16,11 +17,13 @@ import java.util.List;
 @RestController
 public class ApiPostController {
     private PostsService postsService;
+    private PostsServiceHQL postsServiceHQL;
     private CommentsService commentsService;
 
-    public ApiPostController(PostsService postsService, CommentsService commentsService) {
+    public ApiPostController(PostsService postsService, PostsServiceHQL postsServiceHQL, CommentsService commentsService) {
         this.postsService = postsService;
         this.commentsService = commentsService;
+        this.postsServiceHQL = postsServiceHQL;
     }
 
     @GetMapping(path = "/api/post/")
@@ -28,7 +31,8 @@ public class ApiPostController {
                                            @RequestParam(defaultValue = "20") int limit,
                                            @RequestParam String mode)
     {
-        List<PostsResponse> listOfPosts = postsService.getPosts(offset,limit, mode);
+        List<PostsResponse> listOfPosts = postsServiceHQL.getPosts(mode);
+                //postsService.getPosts(offset,limit, mode);
         int total = listOfPosts.size();
         return new ResponsePlatformApi(total, listOfPosts);
     }

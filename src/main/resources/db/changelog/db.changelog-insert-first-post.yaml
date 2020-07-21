@@ -1,0 +1,33 @@
+databaseChangeLog:
+  - logicalFilePath: db.changelog/db.changelog-insert-first-post.yaml
+  - changeSet:
+      id: 11
+      author: master
+      changes:
+          - insert:
+              tableName: posts
+              columns:
+                - column:
+                    name: is_active
+                    value: "1"
+                - column:
+                    name: moderation_status
+                    value: "ACCEPTED"
+                - column:
+                    name: moderator_id
+                    value: "2"
+                - column:
+                    name: user_id
+                    value: "1"
+                - column:
+                    name: time
+                    value: "now()"
+                - column:
+                    name: title
+                    value: "testTitle"
+                - column:
+                    name: text
+                    value: "testText"
+                - column:
+                    name: view_count
+                    value: "5"
