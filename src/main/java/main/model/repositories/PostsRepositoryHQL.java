@@ -1,5 +1,6 @@
 package main.model.repositories;
 
+import main.api.responses.PostsResponse;
 import main.model.Posts;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -9,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface PostsRepositoryHQL extends JpaRepository<Posts, Integer> {
+public interface PostsRepositoryHQL extends JpaRepository<PostsResponse, Integer> {
     @Query("select " +
             "posts.id as id, " +
             "DATE_FORMAT(posts.time, '%d-%c-%Y, %H-%i') as time_of_post, " +
@@ -31,6 +32,6 @@ public interface PostsRepositoryHQL extends JpaRepository<Posts, Integer> {
             "WHERE posts.isActive = 1 " +
             "AND posts.moderationStatus = 'ACCEPTED' " +
             "GROUP BY id ")
-    List<Posts> getAllPosts(
+    List<PostsResponse> getAllPosts(
             @Param("mode") String mode);
 }

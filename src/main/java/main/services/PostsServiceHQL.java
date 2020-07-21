@@ -29,8 +29,8 @@ public class PostsServiceHQL {
 
     public List<PostsResponse> getPosts(String mode)
     {
-        List<Posts> allPosts = postsRepository.getAllPosts(mode);
-        List<PostsResponse> postsResponses = postMapper.postToPostResponse(allPosts);
-        return  postsResponses;
+        List<PostsResponse> allPosts = postsRepository.getAllPosts(mode);
+       // List<PostsResponse> postsResponses = postMapper.postToPostResponse(allPosts);
+        return  allPosts;
     }
 }
