@@ -4,15 +4,20 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import main.api.responses.CommentsResponse;
 import main.model.enums.ModerationStatus;
+import org.hibernate.annotations.*;
 
 import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.Table;
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
+@Where(clause = "moderation_status = 'ACCEPTED' and is_active = 1")
 @Data
 @Table(name = "posts")
-@EqualsAndHashCode(callSuper = false)
 @AllArgsConstructor
 @NoArgsConstructor
 public class Posts{
@@ -27,10 +32,12 @@ public class Posts{
 
     @Enumerated(EnumType.STRING)
     @Column(name = "moderation_status",  nullable = false)
+
     private ModerationStatus moderationStatus;
 
-    @Column(name = "user_id", nullable = false)
-    private int userId;
+    @ManyToOne
+    @JoinColumn(name="user_id", referencedColumnName="id", insertable=false, updatable=false)
+    private Users user;
 
     @Column(nullable = false)
     private LocalDate time;
@@ -41,6 +48,22 @@ public class Posts{
     @Column(columnDefinition = "TEXT", nullable = false)
     private String text;
 
+    @OneToMany
+    @JoinColumn(name="post_id", referencedColumnName ="id", insertable = false, updatable = false)
+    @Where(clause = "value = 1")
+    private List<PostsVotes> likeVotes;
+
+    @OneToMany
+    @JoinColumn(name="post_id", referencedColumnName ="id", insertable = false, updatable = false)
+    @Where(clause = "value = -1")
+    private List<PostsVotes> dislikeVotes;
+
     @Column(name = "view_count", nullable = false)
     private int viewCount;
+
+    @OneToMany
+    @JoinColumn(name="post_id", referencedColumnName ="id", insertable = false, updatable = false)
+    private List<PostComments> comments;
+
+
 }

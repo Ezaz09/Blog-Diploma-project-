@@ -1,9 +1,7 @@
 package main.controller;
 
-import main.api.responses.CertainPostResponse;
-import main.api.responses.CommentsResponse;
-import main.api.responses.PostsResponse;
-import main.api.responses.ResponsePlatformApi;
+import main.api.responses.*;
+import main.model.Posts;
 import main.services.CommentsService;
 import main.services.PostsService;
 import main.services.PostsServiceHQL;
@@ -31,7 +29,7 @@ public class ApiPostController {
                                            @RequestParam(defaultValue = "20") int limit,
                                            @RequestParam String mode)
     {
-        List<PostsResponse> listOfPosts = postsServiceHQL.getPosts(mode);
+        List<PostsResponseHQL> listOfPosts = postsServiceHQL.getPosts(offset, limit, mode);
                 //postsService.getPosts(offset,limit, mode);
         int total = listOfPosts.size();
         return new ResponsePlatformApi(total, listOfPosts);

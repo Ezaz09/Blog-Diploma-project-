@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import org.hibernate.annotations.Formula;
 
 import javax.persistence.*;
 import java.time.LocalDate;
@@ -39,6 +40,7 @@ public class PostsResponse{
     @Column(name="comment_count")
     private int commentCount;
 
+    //@Formula("sum(comments)")
     @Column(name="view_count")
     private int viewCount;
 

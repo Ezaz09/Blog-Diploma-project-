@@ -6,15 +6,11 @@ import javax.persistence.*;
 import java.time.LocalDate;
 import java.util.List;
 
-@Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
-@Setter
 public class CertainPostResponse {
-    @Id
-    @NonNull
+
     private int id;
 
     private String time;
