@@ -2,12 +2,18 @@ package main.services;
 
 import lombok.extern.slf4j.Slf4j;
 import main.api.responses.CertainPostResponse;
+import main.api.responses.PostDTO;
 import main.api.responses.PostsResponse;
 import main.model.Posts;
 import main.model.repositories.PostsRepository;
+import main.services.mappers.PostsMapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -22,23 +28,29 @@ public class PostsService {
         this.postsRepository = postsRepository;
     }
 
-    public List<PostsResponse> getPosts(int offset, int limit, String mode)
+    public List<PostDTO> getPosts(int offset, int limit, String mode)
     {
-        return postsRepository.getAllPosts(offset, limit, mode);
+        Pageable sortedBy = null;
+        if(mode.equals("recent"))
+        {
+            sortedBy = PageRequest.of(offset, limit, Sort.by("time").descending());
+        }
+        else if(mode.equals("popular"))
+        {
+            sortedBy = PageRequest.of(offset, limit, Sort.by("commentCount").descending());
+        }
+        else if(mode.equals("best"))
+        {
+            sortedBy = PageRequest.of(offset, limit, Sort.by("likeCount").descending());
+        }
+        else if(mode.equals("early"))
+        {
+            sortedBy = PageRequest.of(offset, limit, Sort.by("time").ascending());
+        }
+
+        List<Posts> allPosts = postsRepository.findAll(sortedBy).getContent();
+        List<PostDTO> postsResponse = new PostsMapperImpl().postToPostResponse(allPosts);
+        return  postsResponse;
     }
 
-    public List<PostsResponse> getSomePosts(int offset, int limit, String query)
-    {
-        return postsRepository.getSomePosts( offset, limit, query);
-    }
-
-    public PostsResponse getCertainPost(int postId)
-    {
-        return postsRepository.getCertainPost(postId);
-    }
-
-    public List<PostsResponse> getSomePostsByDate(int offset, int limit, String dateForSelection)
-    {
-        return postsRepository.getSomePostsByDate(offset, limit, dateForSelection);
-    }
 }

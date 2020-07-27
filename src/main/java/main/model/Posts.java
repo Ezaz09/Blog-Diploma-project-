@@ -2,9 +2,7 @@ package main.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import main.api.responses.CommentsResponse;
 import main.model.enums.ModerationStatus;
 import org.hibernate.annotations.*;
 
@@ -15,7 +13,6 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Entity
-@Where(clause = "moderation_status = 'ACCEPTED' and is_active = 1")
 @Data
 @Table(name = "posts")
 @AllArgsConstructor
@@ -63,7 +60,7 @@ public class Posts{
 
     @OneToMany
     @JoinColumn(name="post_id", referencedColumnName ="id", insertable = false, updatable = false)
-    private List<PostComments> comments;
+    private List<PostsComments> comments;
 
 
 }

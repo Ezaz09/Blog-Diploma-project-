@@ -1,6 +1,7 @@
 package main.model;
 
 import lombok.Data;
+import org.hibernate.annotations.Formula;
 
 import javax.persistence.*;
 import java.time.LocalDate;
@@ -26,4 +27,5 @@ public class PostsVotes {
 
     @Column(columnDefinition = "TINYINT")
     private int value;
+
 }

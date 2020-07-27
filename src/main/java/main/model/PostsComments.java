@@ -8,7 +8,7 @@ import java.time.LocalDate;
 @Entity
 @Data
 @Table(name = "post_comments")
-public class PostComments {
+public class PostsComments {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
