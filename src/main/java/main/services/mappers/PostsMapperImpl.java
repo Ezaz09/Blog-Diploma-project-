@@ -5,7 +5,6 @@ import main.api.responses.UserResponse;
 import main.model.Posts;
 import main.model.Users;
 
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,7 +31,7 @@ public class PostsMapperImpl {
 
         postDTO.setId( post.getId() );
         if ( post.getTime() != null ) {
-            postDTO.setTime( DateTimeFormatter.ISO_LOCAL_DATE.format( post.getTime() ) );
+            postDTO.setTimestamp( post.getTime().getTime() ) ;
         }
         postDTO.setUser( usersToUserResponse( post.getUser() ) );
         postDTO.setTitle( post.getTitle() );

@@ -27,21 +27,31 @@ public class ApiPostController {
                                                                          @RequestParam(defaultValue = "20", required = false) int limit,
                                                                          @RequestParam(defaultValue = "recent", required = false) String mode )
     {
-        List<PostDTO> listOfPosts = postsService.getPosts(offset, limit, mode);
-        int total = listOfPosts.size();
-
-        PostsResponse postsResponse = PostsResponse.builder()
-                .count(total)
-                .posts(listOfPosts).build();
-        return new ResponseEntity<>(postsResponse, HttpStatus.OK);
+        return postsService.getPosts(offset, limit, mode);
     }
 
     @GetMapping(path = "/api/post/search")
-    public ResponsePlatformApi getSomePosts(@RequestParam(defaultValue = "0") int offset,
+    public ResponseEntity<PostsResponse> getSomePosts(@RequestParam(defaultValue = "0") int offset,
                                          @RequestParam(defaultValue = "20") int limit,
                                          @RequestParam String query)
     {
-        return new ResponsePlatformApi();
+        return postsService.findPostsByQuery(offset,limit,query);
+    }
+
+    @GetMapping(path = "/api/post/byDate")
+    public ResponseEntity<PostsResponse> getSomePostsByDate(@RequestParam(defaultValue = "0") int offset,
+                                                  @RequestParam(defaultValue = "20") int limit,
+                                                  @RequestParam String date)
+    {
+        return postsService.findPostsByDate(offset,limit,date);
+    }
+
+    @GetMapping(path = "/api/post/byTag")
+    public ResponseEntity<PostsResponse> getSomePostsByTag(@RequestParam(defaultValue = "0") int offset,
+                                                            @RequestParam(defaultValue = "20") int limit,
+                                                            @RequestParam String tag)
+    {
+        return postsService.findPostsByTag(offset,limit,tag);
     }
 
     @GetMapping(path = "/api/post/{id}")
@@ -50,11 +60,5 @@ public class ApiPostController {
         return new ResponsePlatformApi();
     }
 
-    @GetMapping(path = "/api/post/byDate")
-    public ResponsePlatformApi getSomePostsByDate(@RequestParam(defaultValue = "0") int offset,
-                                         @RequestParam(defaultValue = "20") int limit,
-                                         @RequestParam String date)
-    {
-        return new ResponsePlatformApi();
-    }
+
 }

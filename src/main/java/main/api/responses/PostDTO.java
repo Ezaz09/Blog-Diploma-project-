@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 public class PostDTO {
     private int id;
 
-    private String time;
+    private Long timestamp;
 
     private UserResponse user;
 

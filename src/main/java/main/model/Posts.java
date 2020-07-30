@@ -9,7 +9,7 @@ import org.hibernate.annotations.*;
 import javax.persistence.*;
 import javax.persistence.Entity;
 import javax.persistence.Table;
-import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -37,7 +37,7 @@ public class Posts{
     private Users user;
 
     @Column(nullable = false)
-    private LocalDate time;
+    private Date time;
 
     @Column(nullable = false, length = 255)
     private String title;
@@ -62,5 +62,8 @@ public class Posts{
     @JoinColumn(name="post_id", referencedColumnName ="id", insertable = false, updatable = false)
     private List<PostsComments> comments;
 
+    @OneToMany
+    @JoinColumn(name="post_id", referencedColumnName = "id", insertable = false, updatable = false)
+    private List<Tag2Post> tags2Post;
 
 }
