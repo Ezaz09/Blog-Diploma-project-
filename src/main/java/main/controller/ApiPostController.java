@@ -31,7 +31,7 @@ public class ApiPostController {
     }
 
     @GetMapping(path = "/api/post/search")
-    public ResponseEntity<PostsResponse> getSomePosts(@RequestParam(defaultValue = "0") int offset,
+    public ResponseEntity<PostsResponse> getPostsByQuery(@RequestParam(defaultValue = "0") int offset,
                                          @RequestParam(defaultValue = "20") int limit,
                                          @RequestParam String query)
     {
@@ -39,7 +39,7 @@ public class ApiPostController {
     }
 
     @GetMapping(path = "/api/post/byDate")
-    public ResponseEntity<PostsResponse> getSomePostsByDate(@RequestParam(defaultValue = "0") int offset,
+    public ResponseEntity<PostsResponse> getPostsByDate(@RequestParam(defaultValue = "0") int offset,
                                                   @RequestParam(defaultValue = "20") int limit,
                                                   @RequestParam String date)
     {
@@ -47,7 +47,7 @@ public class ApiPostController {
     }
 
     @GetMapping(path = "/api/post/byTag")
-    public ResponseEntity<PostsResponse> getSomePostsByTag(@RequestParam(defaultValue = "0") int offset,
+    public ResponseEntity<PostsResponse> getPostsByTag(@RequestParam(defaultValue = "0") int offset,
                                                             @RequestParam(defaultValue = "20") int limit,
                                                             @RequestParam String tag)
     {

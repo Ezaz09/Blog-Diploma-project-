@@ -1,7 +1,6 @@
 package main.services;
 
 import lombok.extern.slf4j.Slf4j;
-import main.api.responses.CertainPostResponse;
 import main.api.responses.PostDTO;
 import main.api.responses.PostsResponse;
 import main.model.Posts;
@@ -9,13 +8,11 @@ import main.model.repositories.PostsRepository;
 import main.services.mappers.PostsMapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import javax.swing.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -34,23 +31,19 @@ public class PostsService {
     public ResponseEntity<PostsResponse> getPosts(int offset, int limit, String mode)
     {
         Sort sort = null;
-        if(mode.equals("recent"))
-        {
-            sort = Sort.by("time").descending();
-        }
-        else if(mode.equals("popular"))
-        {
-            sort = Sort.by(Sort.Order.desc("comments"));
-                    //Sort.by("commentCount").descending();
-        }
-        else if(mode.equals("best"))
-        {
-            sort = Sort.by(Sort.Order.desc("likeVotes"));
-                    //Sort.by("likeCount").descending();
-        }
-        else if(mode.equals("early"))
-        {
-            sort = Sort.by("time").ascending();
+        switch (mode) {
+            case "recent":
+                sort = Sort.by("time").descending();
+                break;
+            case "popular":
+                sort = Sort.by(Sort.Order.desc("comments"));
+                break;
+            case "best":
+                sort = Sort.by(Sort.Order.desc("likeVotes"));
+                break;
+            case "early":
+                sort = Sort.by("time").ascending();
+                break;
         }
 
         if(sort == null)
@@ -61,7 +54,20 @@ public class PostsService {
             return  new ResponseEntity<>(postsResponse, HttpStatus.OK);
         }
 
-        List<Posts> allPosts = postsRepository.findAll(PageRequest.of(offset, limit,sort)).getContent();
+        List<Posts> allPosts;
+        if(mode.equals("best"))
+        {
+            allPosts = postsRepository.getPostsSortByLikeVotes(PageRequest.of(offset,limit));
+        }
+        else if(mode.equals("popular"))
+        {
+            allPosts = postsRepository.getPostsSortByComments(PageRequest.of(offset,limit));
+        }
+        else
+        {
+            allPosts = postsRepository.findAll(PageRequest.of(offset, limit, sort)).getContent();
+        }
+
         List<PostDTO> listOfPosts = new PostsMapperImpl().postToPostResponse(allPosts);
         int total = listOfPosts.size();
 
@@ -73,7 +79,7 @@ public class PostsService {
 
     public ResponseEntity<PostsResponse> findPostsByQuery(int offset, int limit, String query)
     {
-        List<Posts> allPosts = postsRepository.getSomePosts(query);
+        List<Posts> allPosts = postsRepository.getPostsByQuery(query);
         if(allPosts.size() == 0)
         {
             PostsResponse postsResponse = PostsResponse.builder()
@@ -107,7 +113,7 @@ public class PostsService {
            }
 
 
-        List<Posts> allPosts = postsRepository.getSomePostsByDate(parseDate);
+        List<Posts> allPosts = postsRepository.getPostsByDate(parseDate);
         if(allPosts.size() == 0)
         {
             PostsResponse postsResponse = PostsResponse.builder()
@@ -126,7 +132,7 @@ public class PostsService {
 
     public ResponseEntity<PostsResponse> findPostsByTag(int offset, int limit, String tag)
     {
-        List<Posts> allPosts = postsRepository.getSomePostsByTag(tag);
+        List<Posts> allPosts = postsRepository.getPostsByTag(tag);
         if(allPosts.size() == 0)
         {
             PostsResponse postsResponse = PostsResponse.builder()
