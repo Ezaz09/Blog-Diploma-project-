@@ -1,11 +1,10 @@
 package main.controller;
 
-import main.api.responses.CertainPostResponse;
-import main.api.responses.CommentsResponse;
-import main.api.responses.PostsResponse;
-import main.api.responses.ResponsePlatformApi;
+import main.api.responses.*;
 import main.services.CommentsService;
 import main.services.PostsService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -23,59 +22,43 @@ public class ApiPostController {
         this.commentsService = commentsService;
     }
 
-    @GetMapping(path = "/api/post/")
-    public ResponsePlatformApi listOfPosts(@RequestParam(defaultValue = "0") int offset,
-                                           @RequestParam(defaultValue = "20") int limit,
-                                           @RequestParam String mode)
+    @GetMapping(path = "/api/post")
+    public ResponseEntity<PostsResponse> listOfPosts(@RequestParam(defaultValue = "0", required = false) int offset,
+                                                                         @RequestParam(defaultValue = "20", required = false) int limit,
+                                                                         @RequestParam(defaultValue = "recent", required = false) String mode )
     {
-        List<PostsResponse> listOfPosts = postsService.getPosts(offset,limit, mode);
-        int total = listOfPosts.size();
-        return new ResponsePlatformApi(total, listOfPosts);
+        return postsService.getPosts(offset, limit, mode);
     }
 
-    @GetMapping(path = "/api/post/search/")
-    public ResponsePlatformApi getSomePosts(@RequestParam(defaultValue = "0") int offset,
+    @GetMapping(path = "/api/post/search")
+    public ResponseEntity<PostsResponse> getPostsByQuery(@RequestParam(defaultValue = "0") int offset,
                                          @RequestParam(defaultValue = "20") int limit,
                                          @RequestParam String query)
     {
-        List<PostsResponse> listOfPosts = postsService.getSomePosts(offset, limit, query);
-        int total = listOfPosts.size();
-        return new ResponsePlatformApi( total,listOfPosts);
+        return postsService.findPostsByQuery(offset,limit,query);
+    }
+
+    @GetMapping(path = "/api/post/byDate")
+    public ResponseEntity<PostsResponse> getPostsByDate(@RequestParam(defaultValue = "0") int offset,
+                                                  @RequestParam(defaultValue = "20") int limit,
+                                                  @RequestParam String date)
+    {
+        return postsService.findPostsByDate(offset,limit,date);
+    }
+
+    @GetMapping(path = "/api/post/byTag")
+    public ResponseEntity<PostsResponse> getPostsByTag(@RequestParam(defaultValue = "0") int offset,
+                                                            @RequestParam(defaultValue = "20") int limit,
+                                                            @RequestParam String tag)
+    {
+        return postsService.findPostsByTag(offset,limit,tag);
     }
 
     @GetMapping(path = "/api/post/{id}")
-    public CertainPostResponse getPost(@PathVariable int id)
+    public ResponsePlatformApi getPost(@PathVariable int id)
     {
-        CertainPostResponse certainPostResponse = new CertainPostResponse();
-        PostsResponse certainPost = postsService.getCertainPost(id);
-        if(certainPost == null)
-        {
-            return certainPostResponse;
-        }
-        certainPostResponse.setId(certainPost.getId());
-        certainPostResponse.setTime(certainPost.getTime());
-        certainPostResponse.setUser(certainPost.getUser());
-        certainPostResponse.setTitle(certainPost.getTitle());
-        certainPostResponse.setLikeCount(certainPost.getLikeCount());
-        certainPostResponse.setDislikeCount(certainPost.getDislikeCount());
-        certainPostResponse.setCommentCount(certainPost.getCommentCount());
-        certainPostResponse.setViewCount(certainPost.getViewCount());
-        List<CommentsResponse> allCommentsForCertainPost = commentsService.getAllCommentsForCertainPost(id);
-        if(allCommentsForCertainPost == null)
-        {
-            return certainPostResponse;
-        }
-        certainPostResponse.setComments(allCommentsForCertainPost);
-        return certainPostResponse;
+        return new ResponsePlatformApi();
     }
 
-    @GetMapping(path = "/api/post/byDate/")
-    public ResponsePlatformApi getSomePostsByDate(@RequestParam(defaultValue = "0") int offset,
-                                         @RequestParam(defaultValue = "20") int limit,
-                                         @RequestParam String date)
-    {
-        List<PostsResponse> listOfPosts = postsService.getSomePostsByDate(offset, limit, date);
-        int total = listOfPosts.size();
-        return new ResponsePlatformApi(total,listOfPosts);
-    }
+
 }

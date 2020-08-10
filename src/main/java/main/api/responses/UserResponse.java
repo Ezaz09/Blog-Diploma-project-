@@ -9,15 +9,11 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-@Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name="users")
 public class UserResponse {
 
-    @Id
-    @NonNull
     private int id;
 
     private String name;
