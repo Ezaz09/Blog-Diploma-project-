@@ -1,0 +1,36 @@
+databaseChangeLog:
+  - logicalFilePath: db.changelog/db.changelog-create-posts-votes.yaml
+  - changeSet:
+      id: 5
+      author: master
+      changes:
+          - createTable:
+              tableName: posts_votes
+              columns:
+                - column:
+                    name: id
+                    type: int (11)
+                    autoIncrement: true
+                    constraints:
+                      primaryKey: true
+                      nullable: false
+                - column:
+                    name: user_id
+                    type: int (11)
+                    constraints:
+                      nullable: false
+                - column:
+                    name: post_id
+                    type: int (11)
+                    constraints:
+                      nullable: false
+                - column:
+                    name: time
+                    type: datetime
+                    constraints:
+                      nullable: false
+                - column:
+                    name: value
+                    type: tinyint
+                    constraints:
+                      nullable: false

@@ -1,15 +1,23 @@
 package main.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import main.model.enums.ModerationStatus;
+import org.hibernate.annotations.*;
 
 import javax.persistence.*;
-import java.time.LocalDate;
+import javax.persistence.Entity;
+import javax.persistence.Table;
+import java.util.Date;
+import java.util.List;
 
 @Entity
 @Data
 @Table(name = "posts")
-public class Posts {
+@AllArgsConstructor
+@NoArgsConstructor
+public class Posts{
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -21,13 +29,15 @@ public class Posts {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "moderation_status",  nullable = false)
+
     private ModerationStatus moderationStatus;
 
-    @Column(name = "user_id", nullable = false)
-    private int userId;
+    @ManyToOne
+    @JoinColumn(name="user_id", referencedColumnName="id", insertable=false, updatable=false)
+    private Users user;
 
     @Column(nullable = false)
-    private LocalDate time;
+    private Date time;
 
     @Column(nullable = false, length = 255)
     private String title;
@@ -35,6 +45,25 @@ public class Posts {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String text;
 
+    @OneToMany
+    @JoinColumn(name="post_id", referencedColumnName ="id", insertable = false, updatable = false)
+    @Where(clause = "value = 1")
+    private List<PostsVotes> likeVotes;
+
+    @OneToMany
+    @JoinColumn(name="post_id", referencedColumnName ="id", insertable = false, updatable = false)
+    @Where(clause = "value = -1")
+    private List<PostsVotes> dislikeVotes;
+
     @Column(name = "view_count", nullable = false)
     private int viewCount;
+
+    @OneToMany
+    @JoinColumn(name="post_id", referencedColumnName ="id", insertable = false, updatable = false)
+    private List<PostsComments> comments;
+
+    @OneToMany
+    @JoinColumn(name="post_id", referencedColumnName = "id", insertable = false, updatable = false)
+    private List<Tag2Post> tags2Post;
+
 }

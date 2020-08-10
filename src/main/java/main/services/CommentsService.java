@@ -22,6 +22,6 @@ public class CommentsService {
 
     public List<CommentsResponse> getAllCommentsForCertainPost(int postId)
     {
-        return commentsRepository.getAllCommentsForCertainPost(postId);
+        return null;
     }
 }
