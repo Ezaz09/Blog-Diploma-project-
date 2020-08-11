@@ -57,11 +57,11 @@ public class PostsService {
         List<Posts> allPosts;
         if(mode.equals("best"))
         {
-            allPosts = postsRepository.getPostsSortByLikeVotes(PageRequest.of(offset,limit));
+            allPosts = postsRepository.getPostsSortByLikeVotes(PageRequest.of((offset/limit),limit));
         }
         else if(mode.equals("popular"))
         {
-            allPosts = postsRepository.getPostsSortByComments(PageRequest.of(offset,limit));
+            allPosts = postsRepository.getPostsSortByComments(PageRequest.of((offset/limit),limit));
         }
         else
         {

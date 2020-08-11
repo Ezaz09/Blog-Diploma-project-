@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -37,5 +38,10 @@ public class ApiGeneralController {
     public ResponseEntity<List<GlobalSettings>> getGlobalSettings()
     {
         return globalSettingsService.getGlobalSettings();
+    }
+
+    @RequestMapping(method = {RequestMethod.OPTIONS, RequestMethod.GET}, value = "/**/{path:[^\\.]*}")
+    public String redirectToIndex() {
+        return "forward:/";
     }
 }
