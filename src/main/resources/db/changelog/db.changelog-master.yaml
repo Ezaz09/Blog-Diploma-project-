@@ -54,3 +54,6 @@ databaseChangeLog:
     - include:
           file: db.changelog-insert-first-tag2post.yaml
           relativeToChangelogFile: true
+    - include:
+          file: db.changelog-insert-params-into-global-settings.yaml
+          relativeToChangelogFile: true

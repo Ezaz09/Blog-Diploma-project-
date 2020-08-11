@@ -31,7 +31,7 @@ public class PostsMapperImpl {
 
         postDTO.setId( post.getId() );
         if ( post.getTime() != null ) {
-            postDTO.setTimestamp( post.getTime().getTime() ) ;
+            postDTO.setTimestamp( (post.getTime().getTime()) / 1000 ) ;
         }
         postDTO.setUser( usersToUserResponse( post.getUser() ) );
         postDTO.setTitle( post.getTitle() );
