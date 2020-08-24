@@ -34,7 +34,7 @@ public class Posts{
 
     @ManyToOne
     @JoinColumn(name="user_id", referencedColumnName="id", insertable=false, updatable=false)
-    private Users user;
+    private User user;
 
     @Column(nullable = false)
     private Date time;

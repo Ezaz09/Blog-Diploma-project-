@@ -3,7 +3,7 @@ package main.services.mappers;
 import main.api.responses.PostDTO;
 import main.api.responses.UserResponse;
 import main.model.Posts;
-import main.model.Users;
+import main.model.User;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,7 +43,7 @@ public class PostsMapperImpl {
         return postDTO;
     }
 
-    protected UserResponse usersToUserResponse(Users users) {
+    protected UserResponse usersToUserResponse(User users) {
         if ( users == null ) {
             return null;
         }
