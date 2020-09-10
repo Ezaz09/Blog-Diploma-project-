@@ -1,7 +1,7 @@
 package main.services;
 
 import lombok.extern.slf4j.Slf4j;
-import main.api.responses.CommentsResponse;
+import main.api.responses.CommentResponse;
 import main.model.repositories.CommentsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,7 +20,7 @@ public class CommentsService {
         this.commentsRepository = commentsRepository;
     }
 
-    public List<CommentsResponse> getAllCommentsForCertainPost(int postId)
+    public List<CommentResponse> getAllCommentsForCertainPost(int postId)
     {
         return null;
     }

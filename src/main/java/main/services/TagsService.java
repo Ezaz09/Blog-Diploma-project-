@@ -3,7 +3,7 @@ package main.services;
 import lombok.extern.slf4j.Slf4j;
 import main.api.responses.TagDTO;
 import main.api.responses.TagsResponse;
-import main.model.Tags;
+import main.model.Tag;
 import main.model.repositories.TagsRepository;
 import main.services.mappers.TagsMapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +26,7 @@ public class TagsService {
 
     public ResponseEntity<TagsResponse> getTags()
     {
-        List<Tags> allTags = tagsRepository.findAll();
+        List<Tag> allTags = tagsRepository.findAll();
         List<TagDTO> listOfTags = new TagsMapperImpl().tagsToTagsResponse(allTags);
         TagsResponse tagsResponse = TagsResponse.builder()
                 .tags(listOfTags).build();

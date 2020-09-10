@@ -23,5 +23,5 @@ public class Tag2Post {
 
     @OneToOne
     @JoinColumn(name="id", referencedColumnName ="tag_id", insertable = false, updatable = false)
-    private Tags tagId;
+    private Tag tagId;
 }

@@ -1,9 +1,9 @@
 package main.api.responses;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import javax.persistence.*;
-import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -13,21 +13,21 @@ public class CertainPostResponse {
 
     private int id;
 
-    private String time;
+    private Long timestamp;
 
     private UserResponse user;
 
     private String title;
 
-    // private String announce;
+    private String text;
 
     private int likeCount;
 
     private int dislikeCount;
 
-    private int commentCount;
-
     private int viewCount;
 
-    private List<CommentsResponse> comments;
+    private List<CommentResponse> comments;
+
+    private List<String> tags;
 }

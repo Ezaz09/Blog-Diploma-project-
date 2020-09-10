@@ -1,7 +1,7 @@
 package main.services.mappers;
 
-import main.api.responses.PostsResponse;
-import main.model.Posts;
+import main.api.responses.PostResponse;
+import main.model.Post;
 import org.mapstruct.Mapper;
 
 import java.util.List;
@@ -12,7 +12,7 @@ import java.util.List;
         }
 )
 public interface PostMapper {
-        PostsResponse postToPostResponse(Posts post);
-        List<PostsResponse> postToPostResponse(List<Posts> posts);
+        PostResponse postToPostResponse(Post post);
+        List<PostResponse> postToPostResponse(List<Post> posts);
         //Post requestPostToPost(PostRequest requestPost);
 }

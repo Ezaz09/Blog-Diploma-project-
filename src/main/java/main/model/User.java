@@ -1,6 +1,7 @@
 package main.model;
 
 import lombok.Data;
+import main.model.enums.Role;
 
 import javax.persistence.*;
 import java.time.LocalDate;
@@ -35,4 +36,8 @@ public class User {
 
     @Column(columnDefinition = "TEXT")
     private String photo;
+
+    public Role getRole(){
+        return isModerator == 1 ? Role.MODERATOR : Role.USER;
+    }
 }

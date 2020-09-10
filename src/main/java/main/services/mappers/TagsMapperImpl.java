@@ -1,15 +1,13 @@
 package main.services.mappers;
 
-import main.api.responses.PostDTO;
 import main.api.responses.TagDTO;
-import main.model.Posts;
-import main.model.Tags;
+import main.model.Tag;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class TagsMapperImpl {
-    public List<TagDTO> tagsToTagsResponse(List<Tags> tags)
+    public List<TagDTO> tagsToTagsResponse(List<Tag> tags)
     {
         if( tags == null )
         {
@@ -17,14 +15,14 @@ public class TagsMapperImpl {
         }
 
         List<TagDTO> list = new ArrayList<TagDTO>( tags.size() );
-        for ( Tags tags1 : tags ) {
-            list.add( tagToTagDTO( tags1 ) );
+        for ( Tag tag1 : tags ) {
+            list.add( tagToTagDTO(tag1) );
         }
 
         return list;
     }
 
-    public TagDTO tagToTagDTO(Tags tag)
+    public TagDTO tagToTagDTO(Tag tag)
     {
         if( tag == null)
         {

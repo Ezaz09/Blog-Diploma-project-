@@ -12,11 +12,9 @@ public class PostDTO {
 
     private Long timestamp;
 
-    private UserResponse user;
-
     private String title;
 
-    // private String announce;
+    private String announce;
 
     private int likeCount;
 
@@ -25,4 +23,6 @@ public class PostDTO {
     private int commentCount;
 
     private int viewCount;
+
+    private UserResponse user;
 }
