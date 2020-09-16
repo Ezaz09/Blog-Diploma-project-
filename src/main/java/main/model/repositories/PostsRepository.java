@@ -33,12 +33,12 @@ public interface PostsRepository extends JpaRepository<Post, Integer> {
 
     @Query("From Post as p " +
             " LEFT JOIN Tag2Post as t2p ON p.id = t2p.postId" +
-            " LEFT JOIN Tag as t ON t2p.tagId = t.id" +
+            " LEFT JOIN Tag as t ON t2p.tag = t.id" +
             " WHERE t.name = :tag")
     List<Post> getPostsByTag(Pageable pageable, @Param("tag") String tag);
 
-    @Query("From Post as p where p.user = :userId")
-    List<Post> getUserPosts( Pageable pageable, @Param("userId") User user);
+    @Query("From Post as p where p.user = :user")
+    List<Post> getUserPosts(@Param("user") User user);
 
     @Query("From Post as p where p.user = :userId " +
             "and p.isActive = 0")

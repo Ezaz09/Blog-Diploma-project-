@@ -7,7 +7,7 @@ import java.util.List;
 
 public class SettingsMapperImpl {
     public SettingsResponse settingsToSettingsResponse(List<GlobalSetting> settings) {
-        if (settings == null) {
+        if ( settings == null ) {
             return null;
         }
 

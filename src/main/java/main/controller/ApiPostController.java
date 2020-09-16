@@ -1,31 +1,32 @@
 package main.controller;
 
+import main.api.requests.EditPostRequest;
+import main.api.requests.LikeDislikeRequest;
+import main.api.requests.PostRequest;
 import main.api.responses.*;
-import main.services.CommentsService;
+import main.model.Tag;
 import main.services.PostsService;
+import main.services.TagsService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.Collections;
+import java.util.List;
 
 @RestController
+@RequestMapping("/api/post")
 public class ApiPostController {
-    private PostsService postsService;
-    private CommentsService commentsService;
+    private final PostsService postsService;
 
-    public ApiPostController(PostsService postsService, CommentsService commentsService) {
+    public ApiPostController(PostsService postsService) {
         this.postsService = postsService;
-        this.commentsService = commentsService;
     }
 
-    @GetMapping(path = "/api/post")
-    @PreAuthorize("hasAuthority('user:write')")
+    @GetMapping(path = "")
+    //@PreAuthorize("hasAuthority('user:write')")
     public ResponseEntity<PostResponse> listOfPosts(@RequestParam(defaultValue = "0", required = false) int offset,
                                                     @RequestParam(defaultValue = "20", required = false) int limit,
                                                     @RequestParam(defaultValue = "recent", required = false) String mode )
@@ -33,8 +34,16 @@ public class ApiPostController {
         return postsService.getPosts(offset, limit, mode);
     }
 
-    @GetMapping(path = "/api/post/search")
-    @PreAuthorize("hasAuthority('user:moderate')")
+    @PostMapping(path = "")
+    @PreAuthorize("hasAuthority('user:write')")
+    public ResponseEntity<NewPostResponse> addNewPost(@RequestBody PostRequest postRequest,
+                                                      Principal principal)
+    {
+        return postsService.addNewPost(postRequest, principal);
+    }
+
+    @GetMapping(path = "/search")
+    //@PreAuthorize("hasAuthority('user:moderate')")
     public ResponseEntity<PostResponse> getPostsByQuery(@RequestParam(defaultValue = "0") int offset,
                                                         @RequestParam(defaultValue = "20") int limit,
                                                         @RequestParam String query)
@@ -42,7 +51,7 @@ public class ApiPostController {
         return postsService.findPostsByQuery(offset,limit,query);
     }
 
-    @GetMapping(path = "/api/post/byDate")
+    @GetMapping(path = "/byDate")
     public ResponseEntity<PostResponse> getPostsByDate(@RequestParam(defaultValue = "0") int offset,
                                                        @RequestParam(defaultValue = "20") int limit,
                                                        @RequestParam String date)
@@ -50,7 +59,7 @@ public class ApiPostController {
         return postsService.findPostsByDate(offset,limit,date);
     }
 
-    @GetMapping(path = "/api/post/byTag")
+    @GetMapping(path = "/byTag")
     public ResponseEntity<PostResponse> getPostsByTag(@RequestParam(defaultValue = "0") int offset,
                                                       @RequestParam(defaultValue = "20") int limit,
                                                       @RequestParam String tag)
@@ -58,13 +67,23 @@ public class ApiPostController {
         return postsService.findPostsByTag(offset,limit,tag);
     }
 
-    @GetMapping(path = "/api/post/{id}")
-    public  ResponseEntity<CertainPostResponse> getPost(@PathVariable int id)
+    @GetMapping(path = "/{id}")
+    public  ResponseEntity<CertainPostResponse> getPost(@PathVariable int id,
+                                                        Principal principal)
     {
-        return postsService.findPostById(id);
+        return postsService.findPostById(id, principal);
     }
 
-    @GetMapping(path = "/api/post/my")
+    @PutMapping(path = "/{id}")
+    @PreAuthorize("hasAuthority('user:write')")
+    public  ResponseEntity<EditPostResponse> editPost(@PathVariable int id,
+                                                      @RequestBody EditPostRequest editPostRequest,
+                                                      Principal principal)
+    {
+        return postsService.editPost(id, editPostRequest, principal);
+    }
+
+    @GetMapping(path = "/my")
     public  ResponseEntity<PostResponse> getUserPosts(@RequestParam(defaultValue = "0") int offset,
                                                       @RequestParam(defaultValue = "20") int limit,
                                                       @RequestParam(defaultValue = "inactive") String status,
@@ -79,7 +98,7 @@ public class ApiPostController {
         return postsService.findUserPosts(offset, limit, status, principal);
     }
 
-    @GetMapping(path = "/api/post/moderation")
+    @GetMapping(path = "/moderation")
     public  ResponseEntity<PostResponse> getModeratorPosts(@RequestParam(defaultValue = "0") int offset,
                                                       @RequestParam(defaultValue = "20") int limit,
                                                       @RequestParam(defaultValue = "new", required = false)String status,
@@ -91,8 +110,36 @@ public class ApiPostController {
                     .posts(Collections.emptyList()).build();
             return new ResponseEntity<>(postResponse, HttpStatus.OK);
         }
+
         return postsService.findModeratorPosts(offset, limit, status, principal);
     }
+
+    @PostMapping(path= "/like")
+    public ResponseEntity<LikeDislikeResponse> addNewLike(@RequestBody LikeDislikeRequest likeDislikeRequest,
+                                                          Principal principal)
+    {
+        if (principal == null){
+            LikeDislikeResponse likeDislikeResponse = new LikeDislikeResponse();
+            likeDislikeResponse.setResult(false);
+            return new ResponseEntity<>(likeDislikeResponse, HttpStatus.NETWORK_AUTHENTICATION_REQUIRED);
+        }
+
+        return postsService.addNewLike(likeDislikeRequest, principal);
+    }
+
+    @PostMapping(path= "/dislike")
+    public ResponseEntity<LikeDislikeResponse> addNewDislike(@RequestBody LikeDislikeRequest likeDislikeRequest,
+                                                             Principal principal)
+    {
+        if (principal == null){
+            LikeDislikeResponse likeDislikeResponse = new LikeDislikeResponse();
+            likeDislikeResponse.setResult(false);
+            return new ResponseEntity<>(likeDislikeResponse, HttpStatus.NETWORK_AUTHENTICATION_REQUIRED);
+        }
+
+        return postsService.addNewDislike(likeDislikeRequest, principal);
+    }
+
 
 
 }

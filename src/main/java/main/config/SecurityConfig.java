@@ -16,6 +16,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler;
 
 @Configuration
 @EnableWebSecurity
@@ -45,8 +46,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 //.disable()
         .and()
             .logout()
-                .logoutUrl("/api/logout")
+                .logoutUrl("/logout")
                 .clearAuthentication(true)
+                .logoutSuccessHandler(mySimpleUrlLogoutSuccessHandler())
                 .permitAll()
         .and()
             .exceptionHandling().authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
@@ -65,6 +67,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     public AuthenticationSuccessHandler myAuthenticationSuccessHandler(){
         return new AuthenticationSuccessHandlerImpl();
+    }
+
+    @Bean
+    public SimpleUrlLogoutSuccessHandler mySimpleUrlLogoutSuccessHandler(){
+        return new LogoutSuccessHandlerImpl();
     }
 
 

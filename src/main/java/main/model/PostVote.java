@@ -1,10 +1,9 @@
 package main.model;
 
 import lombok.Data;
-import org.hibernate.annotations.Formula;
 
 import javax.persistence.*;
-import java.time.LocalDate;
+import java.util.Date;
 
 @Entity
 @Data
@@ -23,7 +22,7 @@ public class PostVote {
     private int postId;
 
     @Column(nullable = false)
-    private LocalDate time;
+    private Date time;
 
     @Column(columnDefinition = "TINYINT")
     private int value;

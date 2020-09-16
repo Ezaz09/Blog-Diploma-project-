@@ -32,11 +32,11 @@ public class Post {
     private ModerationStatus moderationStatus;
 
     @ManyToOne
-    @JoinColumn(name="moderator_id", referencedColumnName="id", insertable=false, updatable=false)
+    @JoinColumn(name="moderator_id", referencedColumnName="id", updatable=false)
     private User moderator;
 
     @ManyToOne
-    @JoinColumn(name="user_id", referencedColumnName="id", insertable=false, updatable=false)
+    @JoinColumn(name="user_id", referencedColumnName="id", updatable=false)
     private User user;
 
     @Column(nullable = false)
@@ -49,12 +49,12 @@ public class Post {
     private String text;
 
     @OneToMany
-    @JoinColumn(name="post_id", referencedColumnName ="id", insertable = false, updatable = false)
+    @JoinColumn(name="post_id", referencedColumnName ="id", updatable = false)
     @Where(clause = "value = 1")
     private List<PostVote> likeVotes;
 
     @OneToMany
-    @JoinColumn(name="post_id", referencedColumnName ="id", insertable = false, updatable = false)
+    @JoinColumn(name="post_id", referencedColumnName ="id", updatable = false)
     @Where(clause = "value = -1")
     private List<PostVote> dislikeVotes;
 
@@ -62,11 +62,11 @@ public class Post {
     private int viewCount;
 
     @OneToMany
-    @JoinColumn(name="post_id", referencedColumnName ="id", insertable = false, updatable = false)
+    @JoinColumn(name="post_id", referencedColumnName ="id", updatable = false)
     private List<PostComment> comments;
 
     @OneToMany
-    @JoinColumn(name="post_id", referencedColumnName = "id", insertable = false, updatable = false)
+    @JoinColumn(name="post_id", referencedColumnName = "id", updatable = false)
     private List<Tag2Post> tags2Post;
 
 }

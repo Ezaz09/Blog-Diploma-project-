@@ -1,5 +1,6 @@
 package main.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import javax.persistence.*;
@@ -23,7 +24,7 @@ public class PostComment {
     private int postId;
 
     @ManyToOne
-    @JoinColumn(name="user_id", referencedColumnName="id", insertable=false, updatable=false)
+    @JoinColumn(name="user_id", referencedColumnName="id", updatable=false)
     private User user;
 
     @Column(nullable = false)

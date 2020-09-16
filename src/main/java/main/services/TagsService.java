@@ -4,6 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import main.api.responses.TagDTO;
 import main.api.responses.TagsResponse;
 import main.model.Tag;
+import main.model.Tag2Post;
+import main.model.repositories.Tag2PostRepository;
 import main.model.repositories.TagsRepository;
 import main.services.mappers.TagsMapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,10 +20,12 @@ import java.util.List;
 public class TagsService {
 
     private final TagsRepository tagsRepository;
+    private final Tag2PostRepository tag2PostRepository;
 
     @Autowired
-    public TagsService(TagsRepository tagsRepository) {
+    public TagsService(TagsRepository tagsRepository, Tag2PostRepository tag2PostRepository) {
         this.tagsRepository = tagsRepository;
+        this.tag2PostRepository = tag2PostRepository;
     }
 
     public ResponseEntity<TagsResponse> getTags()
@@ -31,5 +35,59 @@ public class TagsService {
         TagsResponse tagsResponse = TagsResponse.builder()
                 .tags(listOfTags).build();
         return new ResponseEntity<>(tagsResponse, HttpStatus.OK);
+    }
+
+    public void setTagsForNewPost(List<String> tagsRequest,
+                                  int postId)
+    {
+        for (String tag : tagsRequest)
+        {
+            Tag finedTag = tagsRepository.findByTagName(tag);
+
+            Tag2Post tag2Post = new Tag2Post();
+            tag2Post.setPostId(postId);
+
+            if( finedTag == null )
+            {
+                Tag newTag = new Tag();
+                newTag.setName(tag);
+                tagsRepository.save(newTag);
+
+                tag2Post.setTag(newTag);
+            }
+            else
+            {
+                tag2Post.setTag(finedTag);
+            }
+
+            tag2PostRepository.save(tag2Post);
+        }
+    }
+
+    public void setTagsForEditingPost(List<String> tagsRequest,
+                                      List<Tag2Post> tag2PostFromPost,
+                                      int postId)
+    {
+        for (Tag2Post tag2Post : tag2PostFromPost)
+        {
+            tag2PostRepository.delete(tag2Post);
+        }
+
+        for (String nameOfTag : tagsRequest)
+        {
+            Tag tag = tagsRepository.findByTagName(nameOfTag);
+            if(tag == null)
+            {
+                Tag newTag = new Tag();
+                newTag.setName(nameOfTag);
+                tagsRepository.save(newTag);
+                tag = newTag;
+            }
+
+            Tag2Post newTag2Post = new Tag2Post();
+            newTag2Post.setPostId(postId);
+            newTag2Post.setTag(tag);
+            tag2PostRepository.save(newTag2Post);
+        }
     }
 }

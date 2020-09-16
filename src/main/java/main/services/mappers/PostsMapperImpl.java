@@ -1,16 +1,22 @@
 package main.services.mappers;
 
+import main.api.requests.EditPostRequest;
+import main.api.requests.PostRequest;
 import main.api.responses.CertainPostResponse;
 import main.api.responses.CommentResponse;
 import main.api.responses.PostDTO;
 import main.api.responses.UserResponse;
 import main.model.*;
+import main.model.enums.ModerationStatus;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class PostsMapperImpl {
-    public List<PostDTO> postToPostResponse(List<Post> posts) {
+
+    public List<PostDTO> postToPostResponse(List<Post> posts)
+    {
         if ( posts == null ) {
             return null;
         }
@@ -23,7 +29,8 @@ public class PostsMapperImpl {
         return list;
     }
 
-    public PostDTO postToPostDTO(Post post) {
+    public PostDTO postToPostDTO(Post post)
+    {
         if ( post == null ) {
             return null;
         }
@@ -45,7 +52,8 @@ public class PostsMapperImpl {
         return postDTO;
     }
 
-    protected UserResponse usersToUserResponse(User users) {
+    protected UserResponse usersToUserResponse(User users)
+    {
         if ( users == null ) {
             return null;
         }
@@ -90,7 +98,7 @@ public class PostsMapperImpl {
         List<String> tags = new ArrayList( tags2Post.size() );
         for (Tag2Post tag2Post : tags2Post)
         {
-            Tag tag = tag2Post.getTagId();
+            Tag tag = tag2Post.getTag();
             tags.add(tag.getName());
         }
         certainPostResponse.setTags(tags);
@@ -113,5 +121,49 @@ public class PostsMapperImpl {
         commentResponse.setText(postComment.getText());
         commentResponse.setUser( usersToUserResponse(postComment.getUser() ));
         return commentResponse;
+    }
+
+    public Post postRequestToPost(PostRequest postRequest,
+                                         User user,
+                                         User moderator)
+    {
+        if ( postRequest == null )
+        {
+            return null;
+        }
+
+        Post post = new Post();
+
+        post.setIsActive( postRequest.getActive() );
+        post.setModerationStatus( ModerationStatus.NEW );
+        post.setModerator( moderator );
+        post.setUser( user );
+        post.setTime( new Date(postRequest.getTimestamp() * 1000) );
+        post.setTitle( postRequest.getTitle() );
+        post.setText( postRequest.getText() );
+        post.setViewCount( 0 );
+
+        return post;
+    }
+
+    public Post editPost(EditPostRequest editPostRequest,
+                         Post post,
+                         boolean changeStatus)
+    {
+        if( post == null )
+        {
+            return null;
+        }
+
+        if(changeStatus)
+        {
+            post.setModerationStatus(ModerationStatus.NEW);
+        }
+
+        post.setTime( new Date(editPostRequest.getTimestamp() * 1000));
+        post.setTitle( editPostRequest.getTitle() );
+        post.setText( editPostRequest.getText() );
+
+        return post;
     }
 }
