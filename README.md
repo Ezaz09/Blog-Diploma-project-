@@ -1,2 +1,2 @@
 # Blog-Diploma-project-
-If you use MySQL - just create new schema named "socialnet", else you need also to change params in "application.properties" for db connection
+Check "development" branch< if you wanna see more fresh build
