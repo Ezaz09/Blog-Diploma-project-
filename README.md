@@ -1,2 +1,2 @@
 # Blog-Diploma-project-
-Check "development" branch< if you wanna see more fresh build
+Check "development" branch, if you wanna see more fresh build
