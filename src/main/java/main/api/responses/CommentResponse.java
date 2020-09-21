@@ -3,6 +3,7 @@ package main.api.responses;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import main.api.responses.user_response.UserResponse;
 
 @Data
 @NoArgsConstructor

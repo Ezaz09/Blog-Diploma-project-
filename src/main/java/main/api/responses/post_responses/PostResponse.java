@@ -1,7 +1,8 @@
-package main.api.responses;
+package main.api.responses.post_responses;
 
 import lombok.Builder;
 import lombok.Data;
+import main.api.responses.post_responses.PostDTO;
 
 import java.util.List;
 

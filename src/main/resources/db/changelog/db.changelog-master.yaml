@@ -60,4 +60,7 @@ databaseChangeLog:
     - include:
         file: db.changelog-alter-data-table-users.yaml
         relativeToChangelogFile: true
+    - include:
+          file: db.changelog-create-indexes.yaml
+          relativeToChangelogFile: true
 

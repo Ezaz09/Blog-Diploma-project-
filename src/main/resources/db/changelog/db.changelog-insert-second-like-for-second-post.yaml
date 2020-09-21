@@ -9,7 +9,7 @@ databaseChangeLog:
               columns:
                 - column:
                     name: user_id
-                    value: "1"
+                    value: "2"
                 - column:
                     name: post_id
                     value: "2"

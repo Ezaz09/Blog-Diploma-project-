@@ -1,7 +1,7 @@
 package main.model.repositories;
 
-import main.api.responses.CertainPostResponse;
-import main.api.responses.PostResponse;
+import main.api.responses.post_responses.CertainPostResponse;
+import main.api.responses.post_responses.PostResponse;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

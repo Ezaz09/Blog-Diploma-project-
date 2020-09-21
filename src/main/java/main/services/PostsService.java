@@ -1,15 +1,16 @@
 package main.services;
 
 import lombok.extern.slf4j.Slf4j;
+import main.api.requests.EditPostByModeratorRequest;
 import main.api.requests.EditPostRequest;
 import main.api.requests.LikeDislikeRequest;
 import main.api.requests.PostRequest;
 import main.api.responses.*;
+import main.api.responses.post_responses.*;
 import main.model.*;
 import main.model.enums.ModerationStatus;
 import main.model.repositories.*;
 import main.services.mappers.PostsMapperImpl;
-import main.services.mappers.TagsMapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -507,6 +508,87 @@ public class PostsService {
     }
 
 
+    public ResponseEntity<EditPostByModeratorResponse> editPostByModerator(EditPostByModeratorRequest editPostByModeratorRequest,
+                                                                           Principal principal) {
+        User moderator = userRepository.findByEmail(principal.getName());
+        EditPostByModeratorResponse editPostByModeratorResponse = checkUser(moderator);
+
+        if (!editPostByModeratorResponse.isResult())
+        {
+            return new ResponseEntity<>(editPostByModeratorResponse, HttpStatus.BAD_REQUEST);
+        }
+
+        Post post = postsRepository.getCertainPost(editPostByModeratorRequest.getPostId());
+
+        if(post == null)
+        {
+            editPostByModeratorResponse = new EditPostByModeratorResponse();
+            editPostByModeratorResponse.setResult(true);
+            HashMap<String, String> error = new HashMap<>();
+            ErrorResponse errorResponse = new ErrorResponse();
+            errorResponse.setErrors(error);
+            editPostByModeratorResponse.setErrors(errorResponse);
+
+            editPostByModeratorResponse.setResult(false);
+            error.put("text", "Запрашиваемый пост не найден!");
+
+            return new ResponseEntity<>(editPostByModeratorResponse, HttpStatus.BAD_REQUEST);
+        }
+
+        if(editPostByModeratorRequest.getDecision().equals("accept"))
+        {
+            post.setModerationStatus(ModerationStatus.ACCEPTED);
+        }
+        else if(editPostByModeratorRequest.getDecision().equals("decline"))
+        {
+            post.setModerationStatus(ModerationStatus.DECLINED);
+        }
+        else
+        {
+            editPostByModeratorResponse = new EditPostByModeratorResponse();
+            editPostByModeratorResponse.setResult(true);
+            HashMap<String, String> error = new HashMap<>();
+            ErrorResponse errorResponse = new ErrorResponse();
+            errorResponse.setErrors(error);
+            editPostByModeratorResponse.setErrors(errorResponse);
+
+            editPostByModeratorResponse.setResult(false);
+            error.put("text", "Выбранный статус для поста не распознан!");
+
+            return new ResponseEntity<>(editPostByModeratorResponse, HttpStatus.BAD_REQUEST);
+        }
+
+        post.setModerator(moderator);
+        postsRepository.save(post);
+
+        editPostByModeratorResponse = new EditPostByModeratorResponse();
+        editPostByModeratorResponse.setResult(true);
+
+        return new ResponseEntity<>(editPostByModeratorResponse, HttpStatus.OK);
+    }
+
+    protected EditPostByModeratorResponse checkUser(User user)
+    {
+        EditPostByModeratorResponse editPostByModeratorResponse = new EditPostByModeratorResponse();
+        editPostByModeratorResponse.setResult(true);
+        HashMap<String, String> error = new HashMap<>();
+        ErrorResponse errorResponse = new ErrorResponse();
+        errorResponse.setErrors(error);
+        editPostByModeratorResponse.setErrors(errorResponse);
+
+        if(user == null)
+        {
+            editPostByModeratorResponse.setResult(false);
+            error.put("text", "Пользователь не авторизован!");
+        }
+        else if(user.getIsModerator() == 0)
+        {
+            editPostByModeratorResponse.setResult(false);
+            error.put("text", "Пользователь не является модератором!");
+        }
+
+        return editPostByModeratorResponse;
+    }
 
 }
 

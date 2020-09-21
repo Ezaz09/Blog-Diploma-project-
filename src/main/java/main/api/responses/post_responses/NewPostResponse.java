@@ -1,6 +1,7 @@
-package main.api.responses;
+package main.api.responses.post_responses;
 
 import lombok.Data;
+import main.api.responses.ErrorResponse;
 
 @Data
 public class NewPostResponse {

@@ -40,7 +40,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         .and()
             .formLogin()
                 .loginPage("/login")
-                //.defaultSuccessUrl("/", true)
                 .successHandler(myAuthenticationSuccessHandler())
                 .permitAll()
                 //.disable()
@@ -48,13 +47,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .logout()
                 .logoutUrl("/logout")
                 .clearAuthentication(true)
-                .logoutSuccessHandler(mySimpleUrlLogoutSuccessHandler())
                 .permitAll()
         .and()
             .exceptionHandling().authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
         .and()
             .httpBasic();
+
     }
+
+
 
     @Bean
     protected DaoAuthenticationProvider daoAuthenticationProvider(){

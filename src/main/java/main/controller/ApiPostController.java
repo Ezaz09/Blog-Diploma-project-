@@ -4,9 +4,11 @@ import main.api.requests.EditPostRequest;
 import main.api.requests.LikeDislikeRequest;
 import main.api.requests.PostRequest;
 import main.api.responses.*;
-import main.model.Tag;
+import main.api.responses.post_responses.CertainPostResponse;
+import main.api.responses.post_responses.EditPostResponse;
+import main.api.responses.post_responses.NewPostResponse;
+import main.api.responses.post_responses.PostResponse;
 import main.services.PostsService;
-import main.services.TagsService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.Collections;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/post")
@@ -98,21 +99,8 @@ public class ApiPostController {
         return postsService.findUserPosts(offset, limit, status, principal);
     }
 
-    @GetMapping(path = "/moderation")
-    public  ResponseEntity<PostResponse> getModeratorPosts(@RequestParam(defaultValue = "0") int offset,
-                                                      @RequestParam(defaultValue = "20") int limit,
-                                                      @RequestParam(defaultValue = "new", required = false)String status,
-                                                      Principal principal)
-    {
-        if (principal == null){
-            PostResponse postResponse = PostResponse.builder()
-                    .count(0)
-                    .posts(Collections.emptyList()).build();
-            return new ResponseEntity<>(postResponse, HttpStatus.OK);
-        }
 
-        return postsService.findModeratorPosts(offset, limit, status, principal);
-    }
+
 
     @PostMapping(path= "/like")
     public ResponseEntity<LikeDislikeResponse> addNewLike(@RequestBody LikeDislikeRequest likeDislikeRequest,

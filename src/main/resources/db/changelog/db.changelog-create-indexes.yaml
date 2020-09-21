@@ -1,0 +1,39 @@
+databaseChangeLog:
+  - logicalFilePath: db.changelog/db.changelog-create-indexes.yaml
+  - changeSet:
+      id: 21
+      author: master
+      changes:
+        - createIndex:
+           columns:
+             - column:
+                 descending: true
+                 name: post_id
+           indexName: idx_post_id
+           schemaName: socialnet
+           tableName: posts_votes
+        - createIndex:
+            columns:
+              - column:
+                  descending: true
+                  name: user_id
+            indexName: idx_user_id
+            schemaName: socialnet
+            tableName: posts_votes
+        - createIndex:
+            columns:
+              - column:
+                  descending: true
+                  name: post_id
+            indexName: idx_post_id
+            schemaName: socialnet
+            tableName: tag2post
+        - createIndex:
+            columns:
+              - column:
+                  descending: true
+                  name: tag_id
+            indexName: idx_tag_id
+            schemaName: socialnet
+            tableName: tag2post
+

@@ -1,8 +1,9 @@
-package main.api.responses;
+package main.api.responses.post_responses;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import main.api.responses.user_response.UserResponse;
 
 @Data
 @NoArgsConstructor

@@ -2,10 +2,10 @@ package main.services.mappers;
 
 import main.api.requests.EditPostRequest;
 import main.api.requests.PostRequest;
-import main.api.responses.CertainPostResponse;
+import main.api.responses.post_responses.CertainPostResponse;
 import main.api.responses.CommentResponse;
-import main.api.responses.PostDTO;
-import main.api.responses.UserResponse;
+import main.api.responses.post_responses.PostDTO;
+import main.api.responses.user_response.UserResponse;
 import main.model.*;
 import main.model.enums.ModerationStatus;
 

@@ -1,12 +1,17 @@
 package main.controller;
 
 import main.api.requests.LoginRequest;
+import main.api.requests.EditProfileRequest;
+import main.api.requests.NewProfileRequest;
 import main.api.responses.LoginResponse;
 import main.api.responses.LogoutResponse;
-import main.api.responses.UserLoginResponse;
-import main.api.responses.UserResponse;
+import main.api.responses.user_response.ProfileResponse;
+import main.api.responses.user_response.UserLoginResponse;
 import main.model.repositories.UserRepository;
+import main.services.ProfileService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,12 +28,14 @@ import java.security.Principal;
 public class ApiAuthController {
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
+    private final ProfileService profileService;
 
     @Autowired
     public ApiAuthController(AuthenticationManager authenticationManager,
-                             UserRepository userRepository) {
+                             UserRepository userRepository, ProfileService profileService) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
+        this.profileService = profileService;
     }
 
     @PostMapping("/login")
@@ -46,13 +53,24 @@ public class ApiAuthController {
 
     @GetMapping("/logout")
     public ResponseEntity<LogoutResponse> logout(Principal principal){
-        if (principal == null) {
-            return ResponseEntity.ok(new LogoutResponse());
-        }
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        authentication.setAuthenticated(false);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Location", "/");
 
-        return ResponseEntity.ok(new LogoutResponse());
+        ResponseEntity responseEntity = new ResponseEntity<>(null, headers, HttpStatus.FOUND);
+
+        if (principal == null) {
+            return responseEntity;
+        }
+
+        SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .setAuthenticated(false);
+
+        LogoutResponse logoutResponse = new LogoutResponse();
+        logoutResponse.setResult(true);
+
+        return new ResponseEntity<>(logoutResponse, headers, HttpStatus.OK);
     }
 
     @GetMapping("/check")
@@ -82,4 +100,11 @@ public class ApiAuthController {
 
         return loginResponse;
     }
+
+    @PostMapping(path = "/register")
+    public ResponseEntity<ProfileResponse> register(@RequestBody NewProfileRequest profileRequest)
+    {
+        return profileService.registerNewUser(profileRequest);
+    }
+
 }
