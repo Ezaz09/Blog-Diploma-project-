@@ -57,7 +57,7 @@ public class ProfileService {
 
     public ResponseEntity<ProfileResponse> editProfile(EditProfileRequest editProfileRequest,
                                                        Principal principal) {
-        ProfileResponse profileResponse = checkValuesFromRequest(editProfileRequest, null, null);
+        ProfileResponse profileResponse = checkValuesFromRequest(principal.getName(),editProfileRequest, null, null);
         if(!profileResponse.isResult())
         {
             return new ResponseEntity<>(profileResponse, HttpStatus.OK);
@@ -75,7 +75,7 @@ public class ProfileService {
 
     public ResponseEntity<ProfileResponse> registerNewUser(NewProfileRequest profileRequest)
     {
-        ProfileResponse profileResponse = checkValuesFromRequest(null, profileRequest, null);
+        ProfileResponse profileResponse = checkValuesFromRequest(null,null, profileRequest, null);
         if(!profileResponse.isResult())
         {
             return new ResponseEntity<>(profileResponse, HttpStatus.OK);
@@ -161,7 +161,7 @@ public class ProfileService {
 
     public ResponseEntity<ProfileResponse> changePassword(ChangePasswordRequest changePasswordRequest)
     {
-        ProfileResponse profileResponse = checkValuesFromRequest(null, null, changePasswordRequest);
+        ProfileResponse profileResponse = checkValuesFromRequest(null,null, null, changePasswordRequest);
         if(!profileResponse.isResult())
         {
             return new ResponseEntity<>(profileResponse, HttpStatus.OK);
@@ -195,7 +195,8 @@ public class ProfileService {
         return true;
     }
 
-    protected ProfileResponse checkValuesFromRequest(EditProfileRequest profileRequest,
+    protected ProfileResponse checkValuesFromRequest(String userEmail,
+                                                     EditProfileRequest profileRequest,
                                                      NewProfileRequest newProfileRequest,
                                                      ChangePasswordRequest changePasswordRequest)
     {
@@ -206,10 +207,13 @@ public class ProfileService {
 
         if(profileRequest != null) {
             String emailFromRequest = profileRequest.getEmail();
-            User byEmail = userRepository.findByEmail(emailFromRequest);
-            if (byEmail != null) {
-                profileResponse.setResult(false);
-                errors.put("email", "Этот e-mail уже зарегистрирован.");
+            if(!userEmail.equals(emailFromRequest))
+            {
+                User byEmail = userRepository.findByEmail(emailFromRequest);
+                if (byEmail != null) {
+                    profileResponse.setResult(false);
+                    errors.put("email", "Этот e-mail уже зарегистрирован.");
+                }
             }
 
             String nameFromRequest = profileRequest.getName();
@@ -246,6 +250,7 @@ public class ProfileService {
                 profileResponse.setResult(false);
                 errors.put("email", "Этот e-mail уже зарегистрирован.");
             }
+
 
             String nameFromRequest = newProfileRequest.getName();
             if (nameFromRequest.isEmpty()) {

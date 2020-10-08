@@ -110,6 +110,7 @@ public class ApiAuthController {
 
         UserLoginResponse userResponse = new UserLoginResponse();
         userResponse.setEmail(currentUser.getEmail());
+        userResponse.setPhoto(currentUser.getPhoto());
         userResponse.setName(currentUser.getName());
         userResponse.setModeration(currentUser.getIsModerator() == 1);
         userResponse.setId(currentUser.getId());
