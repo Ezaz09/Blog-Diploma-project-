@@ -1,1 +1,0 @@
-insert into post_comments (parent_id, post_id, user_id, time, text) VALUES (0, 1, 2, now(), 'I dont know what to say')

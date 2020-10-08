@@ -14,5 +14,6 @@ public class NewProfileRequest {
     private String email;
     private String password;
     private String captcha;
+    @JsonProperty("captcha_secret")
     private String captcha_secret;
 }

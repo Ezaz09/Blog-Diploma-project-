@@ -1,1 +1,0 @@
-insert into posts_votes (user_id, post_id, time, value) values (1, 1, now(), 1) 

@@ -26,7 +26,7 @@ public class ApiStatisticController {
             StatisticResponse statisticResponse = StatisticResponse.builder()
                     .postsCount(0)
                     .likesCount(0)
-                    .dislikeCount(0)
+                    .dislikesCount(0)
                     .viewsCount(0)
                     .firstPublication(0L).build();
             return new ResponseEntity<>(statisticResponse, HttpStatus.OK);

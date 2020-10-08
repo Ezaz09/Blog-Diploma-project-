@@ -3,7 +3,7 @@ package main.model;
 import lombok.Data;
 
 import javax.persistence.*;
-import java.time.LocalDate;
+import java.util.Date;
 
 @Entity
 @Data
@@ -16,7 +16,7 @@ public class CaptchaCode {
     private int id;
 
     @Column(nullable = false)
-    private LocalDate time;
+    private Date time;
 
     @Column(columnDefinition = "TINYTEXT", nullable = false)
     private String code;

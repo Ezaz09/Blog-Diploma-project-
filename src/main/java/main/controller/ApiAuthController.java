@@ -1,14 +1,17 @@
 package main.controller;
 
-import main.api.requests.LoginRequest;
-import main.api.requests.EditProfileRequest;
-import main.api.requests.NewProfileRequest;
-import main.api.responses.LoginResponse;
-import main.api.responses.LogoutResponse;
+import com.github.cage.Cage;
+import com.github.cage.GCage;
+import com.github.cage.YCage;
+import main.api.requests.*;
+import main.api.responses.*;
 import main.api.responses.user_response.ProfileResponse;
 import main.api.responses.user_response.UserLoginResponse;
+import main.model.CaptchaCode;
+import main.model.repositories.CaptchaCodesRepository;
 import main.model.repositories.UserRepository;
 import main.services.ProfileService;
+import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -21,7 +24,17 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
+import javax.imageio.ImageIO;
+import javax.servlet.http.HttpServletRequest;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.security.Principal;
+import java.util.Base64;
+import java.util.Date;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -30,9 +43,11 @@ public class ApiAuthController {
     private final UserRepository userRepository;
     private final ProfileService profileService;
 
+
     @Autowired
     public ApiAuthController(AuthenticationManager authenticationManager,
-                             UserRepository userRepository, ProfileService profileService) {
+                             UserRepository userRepository,
+                             ProfileService profileService) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.profileService = profileService;
@@ -73,6 +88,11 @@ public class ApiAuthController {
         return new ResponseEntity<>(logoutResponse, headers, HttpStatus.OK);
     }
 
+    @GetMapping("/captcha")
+    public ResponseEntity<CaptchaResponse> getCaptcha() throws IOException {
+        return profileService.generateCaptcha();
+    }
+
     @GetMapping("/check")
     public ResponseEntity<LoginResponse> check(Principal principal){
         if (principal == null) {
@@ -105,6 +125,20 @@ public class ApiAuthController {
     public ResponseEntity<ProfileResponse> register(@RequestBody NewProfileRequest profileRequest)
     {
         return profileService.registerNewUser(profileRequest);
+    }
+
+    @PostMapping(path = "/restore")
+    public ResponseEntity<RestorePasswordResponse> restorePassword(@RequestBody RestorePasswordRequest restorePasswordRequest,
+                                                                   HttpServletRequest request)
+    {
+        String appUrl = request.getScheme() + "://" + request.getServerName() + ":8080";
+        return profileService.restorePassword(restorePasswordRequest, appUrl);
+    }
+
+    @PostMapping(path = "/password")
+    public ResponseEntity<ProfileResponse> changePassword(@RequestBody ChangePasswordRequest changePasswordRequest)
+    {
+        return  profileService.changePassword(changePasswordRequest);
     }
 
 }

@@ -1,15 +1,11 @@
 package main.controller;
 
 import main.api.requests.EditProfileRequest;
-import main.api.responses.ErrorResponse;
 import main.api.responses.user_response.ProfileResponse;
 import main.services.ProfileService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.HashMap;
@@ -25,7 +21,7 @@ public class ApiProfileController {
     }
 
     @PostMapping(path = "/my")
-    public ResponseEntity<ProfileResponse> editProfile(@RequestBody EditProfileRequest editProfileRequest,
+    public ResponseEntity<ProfileResponse> editProfile(@ModelAttribute EditProfileRequest editProfileRequest,
                                                        Principal principal)
     {
         if (principal == null){
@@ -35,9 +31,7 @@ public class ApiProfileController {
             HashMap<String, String> errors = new HashMap<>();
             errors.put("authorize", "Пользователь не авторизован");
 
-            ErrorResponse errorResponse = new ErrorResponse();
-            errorResponse.setErrors(errors);
-            profileResponse.setErrors(errorResponse);
+            profileResponse.setErrors(errors);
             return new ResponseEntity<>(profileResponse, HttpStatus.OK);
         }
 

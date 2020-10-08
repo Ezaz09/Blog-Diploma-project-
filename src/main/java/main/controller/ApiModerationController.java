@@ -1,20 +1,15 @@
 package main.controller;
 
 import main.api.requests.EditPostByModeratorRequest;
-import main.api.responses.ErrorResponse;
 import main.api.responses.post_responses.EditPostByModeratorResponse;
-import main.api.responses.post_responses.EditPostResponse;
 import main.api.responses.post_responses.PostResponse;
-import main.model.User;
 import main.services.PostsService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.Collections;
-import java.util.HashMap;
 
 @RestController
 public class ApiModerationController {

@@ -8,7 +8,7 @@ import lombok.Data;
 public class StatisticResponse {
     private int postsCount;
     private int likesCount;
-    private int dislikeCount;
+    private int dislikesCount;
     private int viewsCount;
     private Long firstPublication;
 }

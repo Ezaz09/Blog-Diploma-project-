@@ -5,11 +5,15 @@ import main.api.requests.EditPostByModeratorRequest;
 import main.api.requests.EditPostRequest;
 import main.api.requests.LikeDislikeRequest;
 import main.api.requests.PostRequest;
-import main.api.responses.*;
+import main.api.responses.LikeDislikeResponse;
 import main.api.responses.post_responses.*;
-import main.model.*;
+import main.model.Post;
+import main.model.PostVote;
+import main.model.User;
 import main.model.enums.ModerationStatus;
-import main.model.repositories.*;
+import main.model.repositories.PostVotesRepository;
+import main.model.repositories.PostsRepository;
+import main.model.repositories.UserRepository;
 import main.services.mappers.PostsMapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -22,6 +26,9 @@ import org.springframework.stereotype.Service;
 import java.security.Principal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.*;
 
 @Slf4j
@@ -116,9 +123,9 @@ public class PostsService {
                                                         int limit,
                                                         String date) {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
-        Date parseDate;
+        Date startOfDay;
         try {
-            parseDate = simpleDateFormat.parse(date);
+            startOfDay = simpleDateFormat.parse(date);
         } catch (ParseException ex) {
             PostResponse postResponse = PostResponse.builder()
                     .count(0)
@@ -127,7 +134,12 @@ public class PostsService {
         }
 
         Pageable pageable = PageRequest.of(offset, limit);
-        List<Post> allPosts = postsRepository.getPostsByDate(pageable, parseDate);
+
+        LocalDateTime localDateTime = dateToLocalDateTime(startOfDay);
+        LocalDateTime endOfDayLocalDate = localDateTime.with(LocalTime.MAX);
+        Date endOfDay = localDateTimeToDate(endOfDayLocalDate);
+
+        List<Post> allPosts = postsRepository.getPostsByDate(pageable, startOfDay,endOfDay );
         if (allPosts.size() == 0) {
             PostResponse postResponse = PostResponse.builder()
                     .count(0)
@@ -141,6 +153,14 @@ public class PostsService {
                 .count(total)
                 .posts(listOfPosts).build();
         return new ResponseEntity<>(postResponse, HttpStatus.OK);
+    }
+
+    private static LocalDateTime dateToLocalDateTime(Date date) {
+        return LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
+    }
+
+    private static Date localDateTimeToDate(LocalDateTime localDateTime) {
+        return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
     }
 
     public ResponseEntity<PostResponse> findPostsByTag(int offset,
@@ -320,10 +340,8 @@ public class PostsService {
                 errors.put("text", "Текст публикации слишком короткий");
             }
 
-            ErrorResponse errorResponse = new ErrorResponse();
-            errorResponse.setErrors(errors);
 
-            newPostResponse.setErrors(errorResponse);
+            newPostResponse.setErrors(errors);
             return new ResponseEntity<>(newPostResponse, HttpStatus.OK);
         }
 
@@ -351,10 +369,7 @@ public class PostsService {
             HashMap<String, String> error = new HashMap<>();
             error.put("text", "Запрашиваемый пост не был найден!");
 
-            ErrorResponse errorResponse = new ErrorResponse();
-            errorResponse.setErrors(error);
-
-            editPostResponse.setErrors(errorResponse);
+            editPostResponse.setErrors(error);
 
             return new ResponseEntity<>(editPostResponse, HttpStatus.OK);
         }
@@ -380,10 +395,7 @@ public class PostsService {
                 errors.put("text", "Текст публикации слишком короткий");
             }
 
-            ErrorResponse errorResponse = new ErrorResponse();
-            errorResponse.setErrors(errors);
-
-            editPostResponse.setErrors(errorResponse);
+            editPostResponse.setErrors(errors);
             return new ResponseEntity<>(editPostResponse, HttpStatus.OK);
         }
 
@@ -515,7 +527,7 @@ public class PostsService {
 
         if (!editPostByModeratorResponse.isResult())
         {
-            return new ResponseEntity<>(editPostByModeratorResponse, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(editPostByModeratorResponse, HttpStatus.OK);
         }
 
         Post post = postsRepository.getCertainPost(editPostByModeratorRequest.getPostId());
@@ -525,14 +537,12 @@ public class PostsService {
             editPostByModeratorResponse = new EditPostByModeratorResponse();
             editPostByModeratorResponse.setResult(true);
             HashMap<String, String> error = new HashMap<>();
-            ErrorResponse errorResponse = new ErrorResponse();
-            errorResponse.setErrors(error);
-            editPostByModeratorResponse.setErrors(errorResponse);
+            editPostByModeratorResponse.setErrors(error);
 
             editPostByModeratorResponse.setResult(false);
             error.put("text", "Запрашиваемый пост не найден!");
 
-            return new ResponseEntity<>(editPostByModeratorResponse, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(editPostByModeratorResponse, HttpStatus.OK);
         }
 
         if(editPostByModeratorRequest.getDecision().equals("accept"))
@@ -548,14 +558,12 @@ public class PostsService {
             editPostByModeratorResponse = new EditPostByModeratorResponse();
             editPostByModeratorResponse.setResult(true);
             HashMap<String, String> error = new HashMap<>();
-            ErrorResponse errorResponse = new ErrorResponse();
-            errorResponse.setErrors(error);
-            editPostByModeratorResponse.setErrors(errorResponse);
+            editPostByModeratorResponse.setErrors(error);
 
             editPostByModeratorResponse.setResult(false);
             error.put("text", "Выбранный статус для поста не распознан!");
 
-            return new ResponseEntity<>(editPostByModeratorResponse, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(editPostByModeratorResponse, HttpStatus.OK);
         }
 
         post.setModerator(moderator);
@@ -572,9 +580,7 @@ public class PostsService {
         EditPostByModeratorResponse editPostByModeratorResponse = new EditPostByModeratorResponse();
         editPostByModeratorResponse.setResult(true);
         HashMap<String, String> error = new HashMap<>();
-        ErrorResponse errorResponse = new ErrorResponse();
-        errorResponse.setErrors(error);
-        editPostByModeratorResponse.setErrors(errorResponse);
+        editPostByModeratorResponse.setErrors(error);
 
         if(user == null)
         {
@@ -590,5 +596,12 @@ public class PostsService {
         return editPostByModeratorResponse;
     }
 
+    public ResponseEntity<CountOfPostsPerYearResponse> getCountOfPostsPerYear(int year){
+        List<Post> posts = postsRepository.getCountOfPostsPerYear(year);
+
+        CountOfPostsPerYearResponse countOfPostsPerYearResponse = new PostsMapperImpl().postToCountOfPostsPerYear(posts, year);
+
+        return new ResponseEntity<>(countOfPostsPerYearResponse, HttpStatus.OK);
+    }
 }
 

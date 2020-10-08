@@ -4,14 +4,14 @@ import main.api.requests.EditPostRequest;
 import main.api.requests.PostRequest;
 import main.api.responses.post_responses.CertainPostResponse;
 import main.api.responses.CommentResponse;
+import main.api.responses.post_responses.CountOfPostsPerYearResponse;
 import main.api.responses.post_responses.PostDTO;
 import main.api.responses.user_response.UserResponse;
 import main.model.*;
 import main.model.enums.ModerationStatus;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public class PostsMapperImpl {
 
@@ -165,5 +165,39 @@ public class PostsMapperImpl {
         post.setText( editPostRequest.getText() );
 
         return post;
+    }
+
+    public CountOfPostsPerYearResponse postToCountOfPostsPerYear(List<Post> posts, int year) {
+        if ( posts == null ) {
+            return null;
+        }
+
+        CountOfPostsPerYearResponse countOfPostsPerYearResponse = new CountOfPostsPerYearResponse();
+        List<Integer> years = new ArrayList<>();
+        years.add(year);
+
+        HashMap<String, Integer> countOfPostsPerDay = new HashMap<>(posts.size());
+
+        countOfPostsPerYearResponse.setYears(years);
+        countOfPostsPerYearResponse.setPosts(countOfPostsPerDay);
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+
+        for(Post post : posts)
+        {
+            String dateForMap = simpleDateFormat.format(post.getTime());
+            if(countOfPostsPerDay.containsKey(dateForMap))
+            {
+                int countOfPostPerCertainDay = countOfPostsPerDay.get(dateForMap);
+                countOfPostPerCertainDay += 1;
+                countOfPostsPerDay.put(dateForMap, countOfPostPerCertainDay);
+            }
+            else
+            {
+                countOfPostsPerDay.put(dateForMap,1);
+            }
+
+        }
+
+        return countOfPostsPerYearResponse;
     }
 }

@@ -1,1 +1,0 @@
-insert into users (is_moderator, reg_time, name, email, password, code, photo) Values( 1, now(), 'mainModerator', 'moderator@mail.ru', 'moderatorPass', 'moderatorCode', 'moderatorPhoto')

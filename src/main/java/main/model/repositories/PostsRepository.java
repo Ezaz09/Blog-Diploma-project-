@@ -28,8 +28,8 @@ public interface PostsRepository extends JpaRepository<Post, Integer> {
     @Query("From Post as p where p.title LIKE :query")
     List<Post> getPostsByQuery(Pageable pageable, @Param("query") String query);
 
-    @Query("From Post as p where FORMAT(p.time, 'yyyy-MM-dd') = :time")
-    List<Post> getPostsByDate(Pageable pageable, @Param("time") Date time);
+    @Query("From Post as p where p.time between :startOfDay and :endOfDay")
+    List<Post> getPostsByDate(Pageable pageable, @Param("startOfDay") Date startOfDay, @Param("endOfDay") Date endOfDay);
 
     @Query("From Post as p " +
             " LEFT JOIN Tag2Post as t2p ON p.id = t2p.postId" +
@@ -62,4 +62,7 @@ public interface PostsRepository extends JpaRepository<Post, Integer> {
     @Query("From Post as p where p.moderator = :userId" +
             " and p.moderationStatus = :status")
     List<Post> getModeratorPosts( Pageable pageable, @Param("userId") User moderator, @Param("status") ModerationStatus moderationStatus);
+
+    @Query("From Post as p where year(p.time) = :year order by p.time desc ")
+    List<Post> getCountOfPostsPerYear(@Param("year") Integer year);
 }

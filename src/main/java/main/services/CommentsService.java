@@ -2,7 +2,6 @@ package main.services;
 
 import lombok.extern.slf4j.Slf4j;
 import main.api.requests.CommentRequest;
-import main.api.responses.ErrorResponse;
 import main.api.responses.NewCommentResponse;
 import main.model.PostComment;
 import main.model.User;
@@ -43,14 +42,11 @@ public class CommentsService {
             newCommentResponse.setResult(false);
 
             HashMap<String, String> errors = new HashMap<>(1);
-            errors.put("text", "Some error happened, when server tries to added new comment! You need to say about this problem to your admin!");
+            errors.put("text", "Произошла непредвиденная ошибка при добавлении нового коментария! Сообщите об этом администратору!");
 
-            ErrorResponse errorResponse = new ErrorResponse();
-            errorResponse.setErrors(errors);
+            newCommentResponse.setErrors(errors);
 
-            newCommentResponse.setErrors(errorResponse);
-
-            return new ResponseEntity<>(newCommentResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(newCommentResponse, HttpStatus.OK);
         }
 
         PostComment savedPostComment = commentsRepository.save(newPostComment);

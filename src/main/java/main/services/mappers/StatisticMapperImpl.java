@@ -39,7 +39,7 @@ public class StatisticMapperImpl {
         StatisticResponse statisticResponse = StatisticResponse.builder()
                 .postsCount(postsCount)
                 .likesCount(likesCount)
-                .dislikeCount(dislikesCount)
+                .dislikesCount(dislikesCount)
                 .viewsCount(viewsCount)
                 .firstPublication(firstPublication).build();
 

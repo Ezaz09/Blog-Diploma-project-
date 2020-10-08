@@ -1,37 +1,66 @@
 package main.services;
 
+import com.github.cage.GCage;
 import lombok.extern.slf4j.Slf4j;
+import main.api.requests.ChangePasswordRequest;
 import main.api.requests.EditProfileRequest;
 import main.api.requests.NewProfileRequest;
-import main.api.responses.ErrorResponse;
+import main.api.requests.RestorePasswordRequest;
+import main.api.responses.CaptchaResponse;
+import main.api.responses.RestorePasswordResponse;
 import main.api.responses.user_response.ProfileResponse;
+import main.model.CaptchaCode;
 import main.model.User;
+import main.model.repositories.CaptchaCodesRepository;
 import main.model.repositories.UserRepository;
+import org.apache.commons.io.FileUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.security.Principal;
 import java.time.LocalDate;
+import java.util.Base64;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.UUID;
 
 @Slf4j
 @Service
 public class ProfileService {
     private final UserRepository userRepository;
+    private final CaptchaCodesRepository captchaCodesRepository;
+    private final EmailService emailService;
+    private final ImageService imageService;
 
-    public ProfileService(UserRepository userRepository) {
+    @Autowired
+    public ProfileService(UserRepository userRepository,
+                          CaptchaCodesRepository captchaCodesRepository,
+                          EmailService emailService,
+                          ImageService imageService) {
         this.userRepository = userRepository;
+        this.captchaCodesRepository = captchaCodesRepository;
+        this.emailService = emailService;
+        this.imageService = imageService;
     }
 
     public ResponseEntity<ProfileResponse> editProfile(EditProfileRequest editProfileRequest,
                                                        Principal principal) {
-        ProfileResponse profileResponse = checkValuesFromRequest(editProfileRequest, null);
+        ProfileResponse profileResponse = checkValuesFromRequest(editProfileRequest, null, null);
         if(!profileResponse.isResult())
         {
-            return new ResponseEntity<>(profileResponse, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(profileResponse, HttpStatus.OK);
         }
 
         profileResponse = changeUserProfile(editProfileRequest, principal);
@@ -46,10 +75,10 @@ public class ProfileService {
 
     public ResponseEntity<ProfileResponse> registerNewUser(NewProfileRequest profileRequest)
     {
-        ProfileResponse profileResponse = checkValuesFromRequest(null, profileRequest);
+        ProfileResponse profileResponse = checkValuesFromRequest(null, profileRequest, null);
         if(!profileResponse.isResult())
         {
-            return new ResponseEntity<>(profileResponse, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(profileResponse, HttpStatus.OK);
         }
 
         profileResponse = saveNewUser(profileRequest);
@@ -57,15 +86,123 @@ public class ProfileService {
         return new ResponseEntity<>(profileResponse, HttpStatus.OK);
     }
 
+    public ResponseEntity<CaptchaResponse> generateCaptcha() throws IOException {
+        GCage gCage = new GCage();
+        OutputStream os = new FileOutputStream("captcha.jpg", false);
+        File file = new File("captcha.jpg");
+        CaptchaResponse captchaResponse = new CaptchaResponse();
+
+        try {
+            String secretCode = gCage.getTokenGenerator().next();
+
+            BufferedImage originalImage = gCage.drawImage(secretCode);
+            BufferedImage resizedImage = new BufferedImage(100, 35, 5);
+            Graphics2D g = resizedImage.createGraphics();
+            g.drawImage(originalImage, 0, 0, 100, 35, null);
+            g.dispose();
+            ImageIO.write(resizedImage, "jpg", os);
+
+            byte[] fileContent = FileUtils.readFileToByteArray(file);
+            String encodedString = Base64.getEncoder().encodeToString(fileContent);
+
+            captchaResponse.setSecret(secretCode);
+            captchaResponse.setImage("data:image/png;base64, " + encodedString);
+
+            CaptchaCode captchaCode = new CaptchaCode();
+            captchaCode.setSecretCode(secretCode);
+            captchaCode.setCode(encodedString);
+            captchaCode.setTime(new Date());
+
+            captchaCodesRepository.save(captchaCode);
+        }
+        catch (Exception e)
+        {
+            System.out.println(e);
+        }
+        finally {
+            os.flush();
+            os.close();
+        }
+        file.delete();
+
+        return new ResponseEntity<>(captchaResponse, HttpStatus.OK);
+    }
+
+    public ResponseEntity<RestorePasswordResponse> restorePassword(RestorePasswordRequest restorePasswordRequest,
+                                                                   String appUrl)
+    {
+        User userByEmail = userRepository.findByEmail(restorePasswordRequest.getEmail());
+
+        if(userByEmail == null)
+        {
+            RestorePasswordResponse restorePasswordResponse = new RestorePasswordResponse();
+            restorePasswordResponse.setResult(false);
+            return new ResponseEntity<>(restorePasswordResponse, HttpStatus.OK);
+        }
+
+        String resetCode = UUID.randomUUID().toString();
+        userByEmail.setCode(resetCode);
+
+        userRepository.save(userByEmail);
+
+        SimpleMailMessage passwordResetEmail = new SimpleMailMessage();
+        passwordResetEmail.setTo(restorePasswordRequest.getEmail());
+        passwordResetEmail.setSubject("Запрос на восстановление пароля");
+        passwordResetEmail.setText("Чтобы сменить пароль, кликните по ссылке:\\n "
+                + appUrl + "/login/change-password/" + userByEmail.getCode());
+
+        emailService.sendEmail(passwordResetEmail);
+
+        RestorePasswordResponse restorePasswordResponse = new RestorePasswordResponse();
+        restorePasswordResponse.setResult(true);
+
+        return new ResponseEntity<>(restorePasswordResponse, HttpStatus.OK);
+    }
+
+    public ResponseEntity<ProfileResponse> changePassword(ChangePasswordRequest changePasswordRequest)
+    {
+        ProfileResponse profileResponse = checkValuesFromRequest(null, null, changePasswordRequest);
+        if(!profileResponse.isResult())
+        {
+            return new ResponseEntity<>(profileResponse, HttpStatus.OK);
+        }
+
+        String resetCode = changePasswordRequest.getCode();
+        User userByResetCode = userRepository.findByResetCode(resetCode);
+
+        if (userByResetCode == null) {
+            profileResponse.setResult(false);
+            HashMap<String, String> errors = new HashMap<>();
+            errors.put("code", "код восстановления пароля неверный или устарел." +
+                    "<a href=\n" +
+                    "\t\t\t\t\\\"/auth/restore\\\">Запросить ссылку снова</a>\"");
+            return new ResponseEntity<>(profileResponse, HttpStatus.OK);
+        }
+
+        BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
+        String encode = bCryptPasswordEncoder.encode(changePasswordRequest.getPassword());
+        userByResetCode.setPassword(encode);
+
+        userRepository.save(userByResetCode);
+
+        profileResponse.setResult(true);
+        return new ResponseEntity<>(profileResponse, HttpStatus.OK);
+    }
+
+    protected  boolean checkCaptcha(String captcha)
+    {
+
+        return true;
+    }
+
     protected ProfileResponse checkValuesFromRequest(EditProfileRequest profileRequest,
-                                                     NewProfileRequest newProfileRequest)
+                                                     NewProfileRequest newProfileRequest,
+                                                     ChangePasswordRequest changePasswordRequest)
     {
         ProfileResponse profileResponse = new ProfileResponse();
         profileResponse.setResult(true);
         HashMap<String, String> errors = new HashMap<>();
-        ErrorResponse errorResponse = new ErrorResponse();
-        errorResponse.setErrors(errors);
-        profileResponse.setErrors(errorResponse);
+        profileResponse.setErrors(errors);
 
         if(profileRequest != null) {
             String emailFromRequest = profileRequest.getEmail();
@@ -121,8 +258,34 @@ public class ProfileService {
             if (passwordFromRequest != null) {
                 if (passwordFromRequest.length() < 6) {
                     profileResponse.setResult(false);
-                    errors.put("password", "Пароль короче 6-ти символов");
+                    errors.put("password", "Пароль короче 6-ти символов.");
                 }
+            }
+
+            String captcha = newProfileRequest.getCaptcha();
+            CaptchaCode captchaCodeBySecretCode = captchaCodesRepository.getCaptchaCodeBySecretCode(captcha);
+            if(captchaCodeBySecretCode == null) {
+                profileResponse.setResult(false);
+                errors.put("captcha", "Код с картинки введён неверно.");
+            }
+
+            return profileResponse;
+        }
+        else if( changePasswordRequest != null )
+        {
+            String passwordFromRequest = changePasswordRequest.getPassword();
+            if (passwordFromRequest != null) {
+                if (passwordFromRequest.length() < 6) {
+                    profileResponse.setResult(false);
+                    errors.put("password", "Пароль короче 6-ти символов.");
+                }
+            }
+
+            String captcha = changePasswordRequest.getCaptcha();
+            CaptchaCode captchaCodeBySecretCode = captchaCodesRepository.getCaptchaCodeBySecretCode(captcha);
+            if(captchaCodeBySecretCode == null) {
+                profileResponse.setResult(false);
+                errors.put("captcha", "Код с картинки введён неверно.");
             }
 
             return profileResponse;
@@ -141,9 +304,7 @@ public class ProfileService {
         ProfileResponse profileResponse = new ProfileResponse();
         profileResponse.setResult(true);
         HashMap<String, String> errors = new HashMap<>();
-        ErrorResponse errorResponse = new ErrorResponse();
-        errorResponse.setErrors(errors);
-        profileResponse.setErrors(errorResponse);
+        profileResponse.setErrors(errors);
 
         User user = userRepository.findByEmail(principal.getName());
         user.setName(editProfileRequest.getName());
@@ -184,8 +345,6 @@ public class ProfileService {
 
         }
 
-
-
         userRepository.save(user);
 
         profileResponse.setResult(true);
@@ -194,7 +353,15 @@ public class ProfileService {
 
     protected String saveUserPhoto(MultipartFile photo)
     {
-        return null;
+        Object pathToPhoto = imageService.UploadImageOnServer(photo, "usersPhoto");
+        if (pathToPhoto.getClass().getName().equals("java.lang.String"))
+        {
+            return (String) pathToPhoto;
+        }
+        else
+        {
+            return null;
+        }
     }
 
     protected boolean deleteUserPhoto(String email)
@@ -212,7 +379,6 @@ public class ProfileService {
         newUser.setPassword(encode);
 
         newUser.setName(profileRequest.getName());
-        newUser.setCode(profileRequest.getCaptcha());
         newUser.setRegTime(LocalDate.now());
 
         userRepository.save(newUser);
@@ -222,4 +388,5 @@ public class ProfileService {
 
         return profileResponse;
     }
+
 }

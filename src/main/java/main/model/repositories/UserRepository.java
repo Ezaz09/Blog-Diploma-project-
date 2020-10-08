@@ -17,4 +17,7 @@ public interface UserRepository extends CrudRepository<User, Integer> {
 
     @Query("From User as u where u.isModerator = 1")
     User findModerator();
+
+    @Query("From User as u where u.code = :code")
+    User findByResetCode(@Param("code") String code);
 }
