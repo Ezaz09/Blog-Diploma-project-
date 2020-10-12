@@ -30,7 +30,7 @@ public class ApiImageController {
     @PreAuthorize("hasAuthority('user:write')")
     public Object uploadImageOnServer(@RequestParam("image") MultipartFile image)
     {
-       return imageService.UploadImageOnServer(image, "images");
+       return imageService.uploadImageOnServer(image, "images");
     }
 
 

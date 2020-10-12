@@ -2,10 +2,7 @@ package main.services;
 
 import com.github.cage.GCage;
 import lombok.extern.slf4j.Slf4j;
-import main.api.requests.ChangePasswordRequest;
-import main.api.requests.EditProfileRequest;
-import main.api.requests.NewProfileRequest;
-import main.api.requests.RestorePasswordRequest;
+import main.api.requests.*;
 import main.api.responses.CaptchaResponse;
 import main.api.responses.RestorePasswordResponse;
 import main.api.responses.user_response.ProfileResponse;
@@ -55,15 +52,35 @@ public class ProfileService {
         this.imageService = imageService;
     }
 
-    public ResponseEntity<ProfileResponse> editProfile(EditProfileRequest editProfileRequest,
+    public ResponseEntity<ProfileResponse> editProfile(EditProfileRequestWithPhoto editProfileRequestWithPhoto,
                                                        Principal principal) {
-        ProfileResponse profileResponse = checkValuesFromRequest(principal.getName(),editProfileRequest, null, null);
+        String userEmail = principal.getName();
+        ProfileResponse profileResponse = checkValuesFromRequest(userEmail, editProfileRequestWithPhoto, null,null, null);
         if(!profileResponse.isResult())
         {
             return new ResponseEntity<>(profileResponse, HttpStatus.OK);
         }
 
-        profileResponse = changeUserProfile(editProfileRequest, principal);
+        profileResponse = changeUserProfile(editProfileRequestWithPhoto, userEmail);
+
+        if(profileResponse.isResult())
+        {
+            profileResponse.setErrors(null);
+        }
+
+        return new ResponseEntity<>(profileResponse, HttpStatus.OK);
+    }
+
+    public ResponseEntity<ProfileResponse> editProfile(EditProfileRequestWithoutPhoto editProfileRequestWithoutPhoto,
+                                                       Principal principal) {
+        String userEmail = principal.getName();
+        ProfileResponse profileResponse = checkValuesFromRequest(userEmail,null, editProfileRequestWithoutPhoto, null, null);
+        if(!profileResponse.isResult())
+        {
+            return new ResponseEntity<>(profileResponse, HttpStatus.OK);
+        }
+
+        profileResponse = changeUserProfile(editProfileRequestWithoutPhoto, userEmail);
 
         if(profileResponse.isResult())
         {
@@ -75,7 +92,7 @@ public class ProfileService {
 
     public ResponseEntity<ProfileResponse> registerNewUser(NewProfileRequest profileRequest)
     {
-        ProfileResponse profileResponse = checkValuesFromRequest(null,null, profileRequest, null);
+        ProfileResponse profileResponse = checkValuesFromRequest(null,null, null, profileRequest, null);
         if(!profileResponse.isResult())
         {
             return new ResponseEntity<>(profileResponse, HttpStatus.OK);
@@ -161,7 +178,7 @@ public class ProfileService {
 
     public ResponseEntity<ProfileResponse> changePassword(ChangePasswordRequest changePasswordRequest)
     {
-        ProfileResponse profileResponse = checkValuesFromRequest(null,null, null, changePasswordRequest);
+        ProfileResponse profileResponse = checkValuesFromRequest(null,null, null,null, changePasswordRequest);
         if(!profileResponse.isResult())
         {
             return new ResponseEntity<>(profileResponse, HttpStatus.OK);
@@ -196,7 +213,8 @@ public class ProfileService {
     }
 
     protected ProfileResponse checkValuesFromRequest(String userEmail,
-                                                     EditProfileRequest profileRequest,
+                                                     EditProfileRequestWithPhoto profileRequest,
+                                                     EditProfileRequestWithoutPhoto profileRequestWithoutPhoto,
                                                      NewProfileRequest newProfileRequest,
                                                      ChangePasswordRequest changePasswordRequest)
     {
@@ -237,6 +255,35 @@ public class ProfileService {
                 if (size > 5_242_880) {
                     profileResponse.setResult(false);
                     errors.put("photo", "Фото слишком большое, нужно не более 5 Мб.");
+                }
+            }
+
+            return profileResponse;
+        }
+        else if( profileRequestWithoutPhoto != null )
+        {
+            String emailFromRequest = profileRequestWithoutPhoto.getEmail();
+            if(!userEmail.equals(emailFromRequest))
+            {
+                User byEmail = userRepository.findByEmail(emailFromRequest);
+                if (byEmail != null) {
+                    profileResponse.setResult(false);
+                    errors.put("email", "Этот e-mail уже зарегистрирован.");
+                }
+            }
+
+            String nameFromRequest = profileRequestWithoutPhoto.getName();
+            if (nameFromRequest.isEmpty()) {
+                profileResponse.setResult(false);
+                errors.put("name", "Имя указано неверно.");
+            }
+
+
+            String passwordFromRequest = profileRequestWithoutPhoto.getPassword();
+            if (passwordFromRequest != null) {
+                if (passwordFromRequest.length() < 6) {
+                    profileResponse.setResult(false);
+                    errors.put("password", "Пароль короче 6-ти символов");
                 }
             }
 
@@ -303,52 +350,75 @@ public class ProfileService {
         }
     }
 
-    protected ProfileResponse changeUserProfile(EditProfileRequest editProfileRequest,
-                                                Principal principal)
+    protected ProfileResponse changeUserProfile(EditProfileRequestWithPhoto editProfileRequestWithPhoto,
+                                                String userEmail)
     {
         ProfileResponse profileResponse = new ProfileResponse();
         profileResponse.setResult(true);
         HashMap<String, String> errors = new HashMap<>();
         profileResponse.setErrors(errors);
 
-        User user = userRepository.findByEmail(principal.getName());
-        user.setName(editProfileRequest.getName());
-        user.setEmail(editProfileRequest.getEmail());
+        User user = userRepository.findByEmail(userEmail);
+        user.setName(editProfileRequestWithPhoto.getName());
+        user.setEmail(editProfileRequestWithPhoto.getEmail());
 
-        if(editProfileRequest.getPassword() != null)
+        if(editProfileRequestWithPhoto.getPassword() != null)
         {
             BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
-            String encode = bCryptPasswordEncoder.encode(editProfileRequest.getPassword());
+            String encode = bCryptPasswordEncoder.encode(editProfileRequestWithPhoto.getPassword());
             user.setPassword(encode);
         }
 
 
-        if(editProfileRequest.getPhoto() != null)
+        if(editProfileRequestWithPhoto.getRemovePhoto() == 0)
         {
-            if(editProfileRequest.getRemovePhoto() == 0)
+            String pathToPhoto = saveUserPhoto(editProfileRequestWithPhoto.getPhoto());
+            if(pathToPhoto == null)
             {
-                String pathToPhoto = saveUserPhoto(editProfileRequest.getPhoto());
-                if(pathToPhoto == null)
-                {
-                    profileResponse.setResult(false);
-                    errors.put("photo", "Произошла ошибка при сохранении фотографии.");
-                    return profileResponse;
-                }
-                user.setPhoto(pathToPhoto);
+                profileResponse.setResult(false);
+                errors.put("photo", "Произошла ошибка при сохранении фотографии.");
+                return profileResponse;
             }
-            else
-            {
-                boolean isPhotoDeleted = deleteUserPhoto(user.getEmail());
-                if(!isPhotoDeleted)
-                {
-                    profileResponse.setResult(false);
-                    errors.put("photo", "Произошла ошибка при удалении фотографии.");
-                    return profileResponse;
-                }
-                user.setPhoto(null);
-            }
-
+            user.setPhoto(pathToPhoto);
         }
+
+        userRepository.save(user);
+
+        profileResponse.setResult(true);
+        return profileResponse;
+    }
+
+    protected ProfileResponse changeUserProfile(EditProfileRequestWithoutPhoto editProfileRequestWithoutPhoto,
+                                                String userEmail)
+    {
+        ProfileResponse profileResponse = new ProfileResponse();
+        profileResponse.setResult(true);
+        HashMap<String, String> errors = new HashMap<>();
+        profileResponse.setErrors(errors);
+
+        User user = userRepository.findByEmail(userEmail);
+        user.setName(editProfileRequestWithoutPhoto.getName());
+        user.setEmail(editProfileRequestWithoutPhoto.getEmail());
+
+        if(editProfileRequestWithoutPhoto.getPassword() != null)
+        {
+            BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
+            String encode = bCryptPasswordEncoder.encode(editProfileRequestWithoutPhoto.getPassword());
+            user.setPassword(encode);
+        }
+
+        if(editProfileRequestWithoutPhoto.getRemovePhoto() == 1)
+        {
+            boolean isPhotoDeleted = deleteUserPhoto(user.getPhoto());
+            if(!isPhotoDeleted)
+            {
+                profileResponse.setResult(false);
+                errors.put("photo", "Произошла ошибка при удалении фотографии.");
+                return profileResponse;
+            }
+            user.setPhoto(null);
+        }
+
 
         userRepository.save(user);
 
@@ -358,7 +428,7 @@ public class ProfileService {
 
     protected String saveUserPhoto(MultipartFile photo)
     {
-        Object pathToPhoto = imageService.UploadImageOnServer(photo, "usersPhoto");
+        Object pathToPhoto = imageService.uploadImageOnServer(photo, "usersPhoto");
         if (pathToPhoto.getClass().getName().equals("java.lang.String"))
         {
             return (String) pathToPhoto;
@@ -369,9 +439,9 @@ public class ProfileService {
         }
     }
 
-    protected boolean deleteUserPhoto(String email)
+    protected boolean deleteUserPhoto(String pathToPhoto)
     {
-        return false;
+       return imageService.deleteUserPhotoFromServer(pathToPhoto);
     }
 
     protected ProfileResponse saveNewUser(NewProfileRequest profileRequest)

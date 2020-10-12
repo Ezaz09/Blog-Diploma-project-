@@ -50,7 +50,7 @@ public class ImageService {
         return (String) uploadResult.get("url");
     }
 
-    public Object UploadImageOnServer(MultipartFile image, String nameOfFolder)
+    public Object uploadImageOnServer(MultipartFile image, String nameOfFolder)
     {
         ImageResponse imageResponse = checkUploadingPhoto(image);
 
@@ -136,6 +136,7 @@ public class ImageService {
         HashMap<String, String> paths = new HashMap<>();
         String imagesPath = uploadPath + File.separator + nameOfFolder;
         File uploadCatalog = new File(imagesPath);
+
         if(!uploadCatalog.exists())
         {
             uploadCatalog.mkdirs();
@@ -199,6 +200,26 @@ public class ImageService {
         }
 
         return sb.toString();
+
+    }
+
+    public boolean deleteUserPhotoFromServer(String pathToPhoto)
+    {
+        if( pathToPhoto == null)
+        {
+            return false;
+        }
+
+
+        File file = new File(System.getProperty("user.dir") + File.separator + pathToPhoto);
+        if(file.exists())
+        {
+            return file.delete();
+        }
+        else
+        {
+            return false;
+        }
 
     }
 }
