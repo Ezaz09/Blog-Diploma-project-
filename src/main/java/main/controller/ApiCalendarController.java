@@ -25,8 +25,7 @@ public class ApiCalendarController {
 
     @GetMapping(path = "")
     public ResponseEntity<CountOfPostsPerYearResponse> countOfPostsPerYear(@RequestParam(defaultValue = "0", required = false) int year) throws ParseException {
-        if(year == 0)
-        {
+        if (year == 0) {
             year = Calendar.getInstance().get(Calendar.YEAR);
         }
 

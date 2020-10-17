@@ -7,12 +7,12 @@ import java.util.List;
 
 public class SettingsMapperImpl {
     public SettingsResponse settingsToSettingsResponse(List<GlobalSetting> settings) {
-        if ( settings == null ) {
+        if (settings == null) {
             return null;
         }
 
         SettingsResponse settingsResponse = new SettingsResponse();
-        for( GlobalSetting settings1 : settings ) {
+        for (GlobalSetting settings1 : settings) {
             String settingName = settings1.getName();
             switch (settingName) {
                 case "MULTIUSER_MODE":

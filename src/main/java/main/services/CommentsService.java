@@ -25,8 +25,7 @@ public class CommentsService {
 
     @Autowired
     public CommentsService(CommentsRepository commentsRepository,
-                           UserRepository userRepository)
-    {
+                           UserRepository userRepository) {
         this.commentsRepository = commentsRepository;
         this.userRepository = userRepository;
     }
@@ -36,8 +35,7 @@ public class CommentsService {
         User user = userRepository.findByEmail(principal.getName());
         PostComment newPostComment = new CommentMapperImpl().commentRequestToPostComment(commentRequest, user);
 
-        if( newPostComment == null)
-        {
+        if (newPostComment == null) {
             NewCommentResponse newCommentResponse = new NewCommentResponse();
             newCommentResponse.setResult(false);
 

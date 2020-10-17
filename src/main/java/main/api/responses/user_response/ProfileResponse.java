@@ -8,6 +8,4 @@ import java.util.HashMap;
 public class ProfileResponse {
     private boolean result;
     private HashMap<String, String> errors;
-
-
 }

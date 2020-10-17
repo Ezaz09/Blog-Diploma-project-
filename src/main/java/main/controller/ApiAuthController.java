@@ -1,17 +1,17 @@
 package main.controller;
 
-import com.github.cage.Cage;
-import com.github.cage.GCage;
-import com.github.cage.YCage;
-import main.api.requests.*;
-import main.api.responses.*;
+import main.api.requests.ChangePasswordRequest;
+import main.api.requests.LoginRequest;
+import main.api.requests.NewProfileRequest;
+import main.api.requests.RestorePasswordRequest;
+import main.api.responses.CaptchaResponse;
+import main.api.responses.LoginResponse;
+import main.api.responses.LogoutResponse;
+import main.api.responses.RestorePasswordResponse;
 import main.api.responses.user_response.ProfileResponse;
 import main.api.responses.user_response.UserLoginResponse;
-import main.model.CaptchaCode;
-import main.model.repositories.CaptchaCodesRepository;
 import main.model.repositories.UserRepository;
 import main.services.ProfileService;
-import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -24,17 +24,9 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
-import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.security.Principal;
-import java.util.Base64;
-import java.util.Date;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -67,7 +59,7 @@ public class ApiAuthController {
     }
 
     @GetMapping("/logout")
-    public ResponseEntity<LogoutResponse> logout(Principal principal){
+    public ResponseEntity<LogoutResponse> logout(Principal principal) {
         HttpHeaders headers = new HttpHeaders();
         headers.add("Location", "/");
 
@@ -94,7 +86,7 @@ public class ApiAuthController {
     }
 
     @GetMapping("/check")
-    public ResponseEntity<LoginResponse> check(Principal principal){
+    public ResponseEntity<LoginResponse> check(Principal principal) {
         if (principal == null) {
             return ResponseEntity.ok(new LoginResponse());
         }
@@ -104,7 +96,7 @@ public class ApiAuthController {
     private LoginResponse getLoginResponse(String email) {
         main.model.User currentUser = userRepository.findByEmail(email);
 
-        if(currentUser == null) {
+        if (currentUser == null) {
             throw new UsernameNotFoundException(email);
         }
 
@@ -123,23 +115,20 @@ public class ApiAuthController {
     }
 
     @PostMapping(path = "/register")
-    public ResponseEntity<ProfileResponse> register(@RequestBody NewProfileRequest profileRequest)
-    {
+    public ResponseEntity<ProfileResponse> register(@RequestBody NewProfileRequest profileRequest) {
         return profileService.registerNewUser(profileRequest);
     }
 
     @PostMapping(path = "/restore")
     public ResponseEntity<RestorePasswordResponse> restorePassword(@RequestBody RestorePasswordRequest restorePasswordRequest,
-                                                                   HttpServletRequest request)
-    {
+                                                                   HttpServletRequest request) {
         String appUrl = request.getScheme() + "://" + request.getServerName() + ":8080";
         return profileService.restorePassword(restorePasswordRequest, appUrl);
     }
 
     @PostMapping(path = "/password")
-    public ResponseEntity<ProfileResponse> changePassword(@RequestBody ChangePasswordRequest changePasswordRequest)
-    {
-        return  profileService.changePassword(changePasswordRequest);
+    public ResponseEntity<ProfileResponse> changePassword(@RequestBody ChangePasswordRequest changePasswordRequest) {
+        return profileService.changePassword(changePasswordRequest);
     }
 
 }

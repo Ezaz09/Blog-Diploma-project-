@@ -13,7 +13,10 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -28,8 +31,7 @@ public class ImageService {
     @Value("${blog.upload.path}")
     private String uploadPath;
 
-    public  String uploadImageOnCloudinary(MultipartFile image, String path) throws IOException
-    {
+    public String uploadImageOnCloudinary(MultipartFile image, String path) throws IOException {
         Map params = ObjectUtils.asMap(
                 "public_id", "uploadFolder/" + path + "/" + image.getOriginalFilename(),
                 "overwrite", true,
@@ -50,27 +52,23 @@ public class ImageService {
         return (String) uploadResult.get("url");
     }
 
-    public Object uploadImageOnServer(MultipartFile image, String nameOfFolder)
-    {
+    public Object uploadImageOnServer(MultipartFile image, String nameOfFolder) {
         ImageResponse imageResponse = checkUploadingPhoto(image);
 
-        if(imageResponse != null)
-        {
+        if (imageResponse != null) {
             return new ResponseEntity<>(imageResponse, HttpStatus.OK);
         }
 
         HashMap<String, String> paths = createPathForPhoto(nameOfFolder);
         String resultFilename = image.getOriginalFilename();
 
-        try
-        {
-            if(image.getSize() < 5_242_880)
-            {
+        try {
+            if (image.getSize() < 5_242_880) {
                 File uploadImage = new File(System.getProperty("user.dir") + File.separator +
                         paths.get("uploadPath") + File.separator + resultFilename);
                 image.transferTo(uploadImage);
 
-                if(nameOfFolder.equals("usersPhoto")) {
+                if (nameOfFolder.equals("usersPhoto")) {
                     BufferedImage originalImage = ImageIO.read(uploadImage);
                     OutputStream os = new FileOutputStream(uploadImage.getPath(), false);
 
@@ -83,9 +81,7 @@ public class ImageService {
                 }
 
                 return paths.get("pathForResponse") + "/" + resultFilename;
-            }
-            else
-            {
+            } else {
                 imageResponse = new ImageResponse();
                 imageResponse.setResult(false);
 
@@ -95,9 +91,7 @@ public class ImageService {
                 imageResponse.setErrors(errors);
                 return new ResponseEntity<>(imageResponse, HttpStatus.OK);
             }
-        }
-        catch (IOException exception)
-        {
+        } catch (IOException exception) {
             imageResponse = new ImageResponse();
             imageResponse.setResult(false);
 
@@ -110,12 +104,10 @@ public class ImageService {
     }
 
 
-    protected ImageResponse checkUploadingPhoto(MultipartFile image)
-    {
+    protected ImageResponse checkUploadingPhoto(MultipartFile image) {
         if (image == null ||
                 image.getOriginalFilename() == null ||
-                image.getOriginalFilename().isEmpty())
-        {
+                image.getOriginalFilename().isEmpty()) {
             ImageResponse imageResponse = new ImageResponse();
             imageResponse.setResult(false);
 
@@ -124,36 +116,30 @@ public class ImageService {
 
             imageResponse.setErrors(errors);
             return imageResponse;
-        }
-        else
-        {
+        } else {
             return null;
         }
     }
 
-    protected HashMap<String, String> createPathForPhoto(String nameOfFolder)
-    {
+    protected HashMap<String, String> createPathForPhoto(String nameOfFolder) {
         HashMap<String, String> paths = new HashMap<>();
         String imagesPath = uploadPath + File.separator + nameOfFolder;
         File uploadCatalog = new File(imagesPath);
 
-        if(!uploadCatalog.exists())
-        {
+        if (!uploadCatalog.exists()) {
             uploadCatalog.mkdirs();
         }
 
         String uploadPath = imagesPath;
         String pathForResponse = "/upload/" + nameOfFolder;
         String newUploadPath;
-        for( int i = 0; i < 3; i++)
-        {
+        for (int i = 0; i < 3; i++) {
             String alphaNumericString = getAlphaNumericString(2);
             newUploadPath = uploadPath + File.separator + alphaNumericString;
             pathForResponse = pathForResponse + "/" + alphaNumericString;
             File uploadDir = new File(newUploadPath);
 
-            if(!uploadDir.exists())
-            {
+            if (!uploadDir.exists()) {
                 uploadDir.mkdir();
             }
 
@@ -164,9 +150,7 @@ public class ImageService {
         return paths;
     }
 
-    protected String getAlphaNumericString(int n)
-
-    {
+    protected String getAlphaNumericString(int n) {
         // выбрал символ случайный из этой строки
 
         String AlphaNumericString = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -179,15 +163,14 @@ public class ImageService {
 
         StringBuilder sb = new StringBuilder(n);
 
-        for (int i = 0; i < n; i++)
-        {
+        for (int i = 0; i < n; i++) {
             // генерируем случайное число между
 
             // 0 переменной длины AlphaNumericString
 
             int index
 
-                    = (int)(AlphaNumericString.length()
+                    = (int) (AlphaNumericString.length()
 
                     * Math.random());
 
@@ -203,21 +186,16 @@ public class ImageService {
 
     }
 
-    public boolean deleteUserPhotoFromServer(String pathToPhoto)
-    {
-        if( pathToPhoto == null)
-        {
+    public boolean deleteUserPhotoFromServer(String pathToPhoto) {
+        if (pathToPhoto == null) {
             return false;
         }
 
 
         File file = new File(System.getProperty("user.dir") + File.separator + pathToPhoto);
-        if(file.exists())
-        {
+        if (file.exists()) {
             return file.delete();
-        }
-        else
-        {
+        } else {
             return false;
         }
 

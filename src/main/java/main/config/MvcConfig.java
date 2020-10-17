@@ -15,7 +15,7 @@ public class MvcConfig implements WebMvcConfigurer {
 
 
     private static final String[] CLASSPATH_RESOURCE_LOCATIONS = {
-            "classpath:/resources/", "classpath:/static/", "classpath:/templates/" };
+            "classpath:/resources/", "classpath:/static/", "classpath:/templates/"};
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {

@@ -6,7 +6,6 @@ import lombok.Data;
 @Data
 @Builder
 public class ResponseInit {
-
     private String title;
     private String subtitle;
     private String phone;

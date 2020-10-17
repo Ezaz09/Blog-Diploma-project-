@@ -6,7 +6,4 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface CommentsRepository extends JpaRepository<PostComment, Integer> {
-   /*@Query("From PostsComments as pComments")
-    List<CommentsResponse> getAllCommentsForCertainPost(
-            @Param("postId") int postId);*/
 }

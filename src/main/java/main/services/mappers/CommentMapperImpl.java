@@ -9,17 +9,14 @@ import java.util.Date;
 public class CommentMapperImpl {
 
     public PostComment commentRequestToPostComment(CommentRequest commentRequest,
-                                                   User user)
-    {
-        if( commentRequest == null)
-        {
+                                                   User user) {
+        if (commentRequest == null) {
             return null;
         }
 
         PostComment newComment = new PostComment();
 
-        if( commentRequest.getParentId() != 0 )
-        {
+        if (commentRequest.getParentId() != 0) {
             newComment.setParentId(commentRequest.getParentId());
         }
 

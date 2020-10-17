@@ -12,5 +12,5 @@ public interface Tag2PostRepository extends JpaRepository<Tag2Post, Integer> {
     @Query("From Tag2Post as t2p " +
             " WHERE t2p.postId = :postId" +
             " AND t2p.tag = :tag")
-    Tag2Post getTag2PostByIdAndTag (@Param("postId") int id, @Param("tag") Tag tag);
+    Tag2Post getTag2PostByIdAndTag(@Param("postId") int id, @Param("tag") Tag tag);
 }

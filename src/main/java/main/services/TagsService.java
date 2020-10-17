@@ -28,8 +28,7 @@ public class TagsService {
         this.tag2PostRepository = tag2PostRepository;
     }
 
-    public ResponseEntity<TagsResponse> getTags()
-    {
+    public ResponseEntity<TagsResponse> getTags() {
         List<Tag> allTags = tagsRepository.findAll();
         List<TagDTO> listOfTags = new TagsMapperImpl().tagsToTagsResponse(allTags);
         TagsResponse tagsResponse = TagsResponse.builder()
@@ -38,25 +37,20 @@ public class TagsService {
     }
 
     public void setTagsForNewPost(List<String> tagsRequest,
-                                  int postId)
-    {
-        for (String tag : tagsRequest)
-        {
+                                  int postId) {
+        for (String tag : tagsRequest) {
             Tag finedTag = tagsRepository.findByTagName(tag);
 
             Tag2Post tag2Post = new Tag2Post();
             tag2Post.setPostId(postId);
 
-            if( finedTag == null )
-            {
+            if (finedTag == null) {
                 Tag newTag = new Tag();
                 newTag.setName(tag);
                 tagsRepository.save(newTag);
 
                 tag2Post.setTag(newTag);
-            }
-            else
-            {
+            } else {
                 tag2Post.setTag(finedTag);
             }
 
@@ -66,18 +60,14 @@ public class TagsService {
 
     public void setTagsForEditingPost(List<String> tagsRequest,
                                       List<Tag2Post> tag2PostFromPost,
-                                      int postId)
-    {
-        for (Tag2Post tag2Post : tag2PostFromPost)
-        {
+                                      int postId) {
+        for (Tag2Post tag2Post : tag2PostFromPost) {
             tag2PostRepository.delete(tag2Post);
         }
 
-        for (String nameOfTag : tagsRequest)
-        {
+        for (String nameOfTag : tagsRequest) {
             Tag tag = tagsRepository.findByTagName(nameOfTag);
-            if(tag == null)
-            {
+            if (tag == null) {
                 Tag newTag = new Tag();
                 newTag.setName(nameOfTag);
                 tagsRepository.save(newTag);

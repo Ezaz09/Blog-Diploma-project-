@@ -1,10 +1,8 @@
 package main.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import javax.persistence.*;
-import java.time.LocalDate;
 import java.util.Date;
 
 @Entity
@@ -24,7 +22,7 @@ public class PostComment {
     private int postId;
 
     @ManyToOne
-    @JoinColumn(name="user_id", referencedColumnName="id", updatable=false)
+    @JoinColumn(name = "user_id", referencedColumnName = "id", updatable = false)
     private User user;
 
     @Column(nullable = false)

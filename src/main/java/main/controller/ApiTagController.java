@@ -10,14 +10,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class ApiTagController {
     private TagsService tagsService;
 
-    public ApiTagController(TagsService tagsService)
-    {
+    public ApiTagController(TagsService tagsService) {
         this.tagsService = tagsService;
     }
 
     @GetMapping(path = "/api/tag")
-    public ResponseEntity<TagsResponse> listOfTags()
-    {
+    public ResponseEntity<TagsResponse> listOfTags() {
         return tagsService.getTags();
     }
 }

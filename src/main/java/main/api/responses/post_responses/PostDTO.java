@@ -10,20 +10,12 @@ import main.api.responses.user_response.UserResponse;
 @AllArgsConstructor
 public class PostDTO {
     private int id;
-
     private Long timestamp;
-
     private String title;
-
     private String announce;
-
     private int likeCount;
-
     private int dislikeCount;
-
     private int commentCount;
-
     private int viewCount;
-
     private UserResponse user;
 }

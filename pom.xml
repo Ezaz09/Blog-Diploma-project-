@@ -9,7 +9,7 @@
         <version>2.2.4.RELEASE</version>
     </parent>
     <groupId>org.example</groupId>
-    <artifactId>DiplomaProject</artifactId>
+    <artifactId>Blog-Diploma-project-</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <properties>

@@ -34,12 +34,11 @@ public class StatisticService {
         this.globalSettingsRepository = globalSettingsRepository;
     }
 
-    public ResponseEntity<StatisticResponse> collectInformationAboutUserPosts(Principal principal)
-    {
+    public ResponseEntity<StatisticResponse> collectInformationAboutUserPosts(Principal principal) {
         User user = userRepository.findByEmail(principal.getName());
         List<Post> userPosts = postsRepository.getUserPosts(user);
 
-        if (userPosts.size() == 0){
+        if (userPosts.size() == 0) {
             StatisticResponse statisticResponse = StatisticResponse.builder()
                     .postsCount(0)
                     .likesCount(0)
@@ -61,23 +60,17 @@ public class StatisticService {
                 .findAny()
                 .orElse(null);
 
-        if( statisticIsPublic == null )
-        {
+        if (statisticIsPublic == null) {
             throw new HttpException("Blog statistics is not public!");
         }
 
-        if( !statisticIsPublic.getValue().equals("true") )
-        {
-            if( principal == null )
-            {
+        if (!statisticIsPublic.getValue().equals("true")) {
+            if (principal == null) {
                 throw new HttpException("Blog statistics is not public!");
-            }
-            else
-            {
+            } else {
                 User user = userRepository.findByEmail(principal.getName());
                 int isModerator = user.getIsModerator();
-                if( isModerator == 0)
-                {
+                if (isModerator == 0) {
                     throw new HttpException("Blog statistics is not public!");
                 }
             }
@@ -85,7 +78,7 @@ public class StatisticService {
 
         List<Post> allPosts = postsRepository.findAll();
 
-        if (allPosts.size() == 0){
+        if (allPosts.size() == 0) {
             StatisticResponse statisticResponse = StatisticResponse.builder()
                     .postsCount(0)
                     .likesCount(0)

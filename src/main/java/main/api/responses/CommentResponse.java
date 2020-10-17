@@ -9,13 +9,8 @@ import main.api.responses.user_response.UserResponse;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CommentResponse {
-
     private int id;
-
     private Long timestamp;
-
     private String text;
-
     private UserResponse user;
-
 }

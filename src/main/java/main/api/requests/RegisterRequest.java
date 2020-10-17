@@ -11,12 +11,8 @@ import lombok.NoArgsConstructor;
 public class RegisterRequest {
     @JsonProperty("e_mail")
     private String email;
-
     private String name;
-
     private String password;
-
     private String captcha;
-
     private String captcha_secret;
 }

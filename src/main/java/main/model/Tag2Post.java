@@ -5,7 +5,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.util.List;
 
 @Entity
 @Data
@@ -23,6 +22,6 @@ public class Tag2Post {
     private int postId;
 
     @OneToOne
-    @JoinColumn(name="tag_id", referencedColumnName ="id")
+    @JoinColumn(name = "tag_id", referencedColumnName = "id")
     private Tag tag;
 }

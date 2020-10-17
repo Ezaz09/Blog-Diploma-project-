@@ -12,25 +12,16 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api/image")
 public class ApiImageController {
 
-
-
     private ImageService imageService;
 
     public ApiImageController(ImageService imageService) {
         this.imageService = imageService;
     }
 
-   /* @PostMapping(path = "")
-    @PreAuthorize("hasAuthority('user:write')")
-    public String uploadImageOnServer(@RequestParam("image") MultipartFile image) throws IOException {
-        return imageService.uploadImage(image, "uploadFolderForPosts");
-    }*/
-
     @PostMapping(path = "", consumes = {"multipart/form-data"})
     @PreAuthorize("hasAuthority('user:write')")
-    public Object uploadImageOnServer(@RequestParam("image") MultipartFile image)
-    {
-       return imageService.uploadImageOnServer(image, "images");
+    public Object uploadImageOnServer(@RequestParam("image") MultipartFile image) {
+        return imageService.uploadImageOnServer(image, "images");
     }
 
 

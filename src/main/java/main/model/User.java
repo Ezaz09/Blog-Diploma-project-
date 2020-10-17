@@ -37,7 +37,7 @@ public class User {
     @Column(columnDefinition = "TEXT")
     private String photo;
 
-    public Role getRole(){
+    public Role getRole() {
         return isModerator == 1 ? Role.MODERATOR : Role.USER;
     }
 }

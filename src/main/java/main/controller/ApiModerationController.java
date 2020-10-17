@@ -23,10 +23,9 @@ public class ApiModerationController {
     @GetMapping(path = "/api/post/moderation")
     public ResponseEntity<PostResponse> getModeratorPosts(@RequestParam(defaultValue = "0") int offset,
                                                           @RequestParam(defaultValue = "20") int limit,
-                                                          @RequestParam(defaultValue = "new", required = false)String status,
-                                                          Principal principal)
-    {
-        if (principal == null){
+                                                          @RequestParam(defaultValue = "new", required = false) String status,
+                                                          Principal principal) {
+        if (principal == null) {
             PostResponse postResponse = PostResponse.builder()
                     .count(0)
                     .posts(Collections.emptyList()).build();
@@ -38,11 +37,7 @@ public class ApiModerationController {
 
     @PostMapping(path = "/api/moderation")
     public ResponseEntity<EditPostByModeratorResponse> editUserPost(@RequestBody EditPostByModeratorRequest editPostByModeratorRequest,
-                                                                    Principal principal)
-    {
+                                                                    Principal principal) {
         return postsService.editPostByModerator(editPostByModeratorRequest, principal);
     }
-
-
-
 }

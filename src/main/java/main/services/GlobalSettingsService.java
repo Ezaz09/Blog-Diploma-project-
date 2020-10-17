@@ -23,8 +23,7 @@ public class GlobalSettingsService {
         this.globalSettingsRepository = globalSettingsRepository;
     }
 
-    public ResponseEntity<SettingsResponse> getGlobalSettings()
-    {
+    public ResponseEntity<SettingsResponse> getGlobalSettings() {
         List<GlobalSetting> allGlobalSettings = globalSettingsRepository.findAll();
         SettingsResponse settingsResponse = new SettingsMapperImpl().settingsToSettingsResponse(allGlobalSettings);
         return new ResponseEntity<>(settingsResponse, HttpStatus.OK);

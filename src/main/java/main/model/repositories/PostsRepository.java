@@ -42,26 +42,26 @@ public interface PostsRepository extends JpaRepository<Post, Integer> {
 
     @Query("From Post as p where p.user = :userId " +
             "and p.isActive = 0")
-    List<Post> getInactiveUserPosts( Pageable pageable, @Param("userId") User user);
+    List<Post> getInactiveUserPosts(Pageable pageable, @Param("userId") User user);
 
     @Query("From Post as p where p.user = :userId " +
             "and p.isActive = 1 " +
             "and p.moderationStatus = 'NEW'")
-    List<Post> getPendingUserPosts( Pageable pageable, @Param("userId") User user);
+    List<Post> getPendingUserPosts(Pageable pageable, @Param("userId") User user);
 
     @Query("From Post as p where p.user = :userId " +
             "and p.isActive = 1 " +
             "and p.moderationStatus = 'DECLINED'")
-    List<Post> getDeclinedUserPosts( Pageable pageable, @Param("userId") User user);
+    List<Post> getDeclinedUserPosts(Pageable pageable, @Param("userId") User user);
 
     @Query("From Post as p where p.user = :userId " +
             "and p.isActive = 1 " +
             "and p.moderationStatus = 'ACCEPTED'")
-    List<Post> getPublishedUserPosts( Pageable pageable, @Param("userId") User user);
+    List<Post> getPublishedUserPosts(Pageable pageable, @Param("userId") User user);
 
     @Query("From Post as p where p.moderator = :userId" +
             " and p.moderationStatus = :status")
-    List<Post> getModeratorPosts( Pageable pageable, @Param("userId") User moderator, @Param("status") ModerationStatus moderationStatus);
+    List<Post> getModeratorPosts(Pageable pageable, @Param("userId") User moderator, @Param("status") ModerationStatus moderationStatus);
 
     @Query("From Post as p where year(p.time) = :year order by p.time desc ")
     List<Post> getCountOfPostsPerYear(@Param("year") Integer year);

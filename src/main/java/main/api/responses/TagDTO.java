@@ -8,9 +8,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TagDTO {
-
     private String name;
-
     private int weight;
-
 }

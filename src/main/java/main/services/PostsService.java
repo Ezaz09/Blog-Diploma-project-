@@ -139,7 +139,7 @@ public class PostsService {
         LocalDateTime endOfDayLocalDate = localDateTime.with(LocalTime.MAX);
         Date endOfDay = localDateTimeToDate(endOfDayLocalDate);
 
-        List<Post> allPosts = postsRepository.getPostsByDate(pageable, startOfDay,endOfDay );
+        List<Post> allPosts = postsRepository.getPostsByDate(pageable, startOfDay, endOfDay);
         if (allPosts.size() == 0) {
             PostResponse postResponse = PostResponse.builder()
                     .count(0)
@@ -191,29 +191,22 @@ public class PostsService {
         }
 
         int viewCount = post.getViewCount();
-        if( principal !=null )
-        {
+        if (principal != null) {
             User user = userRepository.findByEmail(principal.getName());
-            if(user.getIsModerator() != 1
-               && user.getId() != post.getUser().getId())
-            {
+            if (user.getIsModerator() != 1
+                    && user.getId() != post.getUser().getId()) {
                 post.setViewCount(post.getViewCount() + 1);
 
             }
-        }
-        else
-        {
+        } else {
             post.setViewCount(post.getViewCount() + 1);
         }
 
         CertainPostResponse certainPostResponse;
-        if( viewCount != post.getViewCount())
-        {
+        if (viewCount != post.getViewCount()) {
             Post savedPost = postsRepository.save(post);
             certainPostResponse = new PostsMapperImpl().certainPostToPostResponse(savedPost);
-        }
-        else
-        {
+        } else {
             certainPostResponse = new PostsMapperImpl().certainPostToPostResponse(post);
         }
 
@@ -228,7 +221,7 @@ public class PostsService {
         User user = userRepository.findByEmail(principal.getName());
 
         List<Post> allPosts = null;
-        switch (mode){
+        switch (mode) {
             case "inactive":
                 allPosts = postsRepository.getInactiveUserPosts(pageable, user);
                 break;
@@ -276,8 +269,7 @@ public class PostsService {
                 break;
         }
 
-        if (moderationStatus == null)
-        {
+        if (moderationStatus == null) {
             PostResponse postResponse = PostResponse.builder()
                     .count(0)
                     .posts(Collections.emptyList()).build();
@@ -311,8 +303,7 @@ public class PostsService {
                 user,
                 moderator);
 
-        if( newPost == null )
-        {
+        if (newPost == null) {
             NewPostResponse newPostResponse = new NewPostResponse();
             newPostResponse.setResult(false);
 
@@ -322,21 +313,18 @@ public class PostsService {
         String editPostRequestTitle = postRequest.getTitle();
         String editPostRequestText = postRequest.getText();
 
-        if(editPostRequestTitle.length() < 3 ||
-                editPostRequestText.length() < 50)
-        {
+        if (editPostRequestTitle.length() < 3 ||
+                editPostRequestText.length() < 50) {
             NewPostResponse newPostResponse = new NewPostResponse();
             newPostResponse.setResult(false);
 
             HashMap<String, String> errors = new HashMap<>();
 
-            if(editPostRequestTitle.length() < 3)
-            {
+            if (editPostRequestTitle.length() < 3) {
                 errors.put("title", "Заголовок слишком короткий");
             }
 
-            if(editPostRequestText.length() < 50)
-            {
+            if (editPostRequestText.length() < 50) {
                 errors.put("text", "Текст публикации слишком короткий");
             }
 
@@ -347,7 +335,7 @@ public class PostsService {
 
         postsRepository.save(newPost);
         tagsService.setTagsForNewPost(postRequest.getTags(),
-                                      newPost.getId());
+                newPost.getId());
 
         NewPostResponse newPostResponse = new NewPostResponse();
         newPostResponse.setResult(true);
@@ -357,8 +345,7 @@ public class PostsService {
 
     public ResponseEntity<EditPostResponse> editPost(int id,
                                                      EditPostRequest editPostRequest,
-                                                     Principal principal)
-    {
+                                                     Principal principal) {
         Post post = postsRepository.getCertainPost(id);
 
         if (post == null) {
@@ -377,21 +364,18 @@ public class PostsService {
         String editPostRequestTitle = editPostRequest.getTitle();
         String editPostRequestText = editPostRequest.getText();
 
-        if(editPostRequestTitle.length() < 3 ||
-                editPostRequestText.length() < 50)
-        {
+        if (editPostRequestTitle.length() < 3 ||
+                editPostRequestText.length() < 50) {
             EditPostResponse editPostResponse = new EditPostResponse();
             editPostResponse.setResult(false);
 
             HashMap<String, String> errors = new HashMap<>();
 
-            if(editPostRequestTitle.length() < 3)
-            {
+            if (editPostRequestTitle.length() < 3) {
                 errors.put("title", "Заголовок слишком короткий");
             }
 
-            if(editPostRequestText.length() < 50)
-            {
+            if (editPostRequestText.length() < 50) {
                 errors.put("text", "Текст публикации слишком короткий");
             }
 
@@ -402,12 +386,9 @@ public class PostsService {
         User user = userRepository.findByEmail(principal.getName());
         boolean changeStatus;
 
-        if(user.getIsModerator() == 1)
-        {
+        if (user.getIsModerator() == 1) {
             changeStatus = false;
-        }
-        else
-        {
+        } else {
             changeStatus = true;
         }
 
@@ -417,8 +398,8 @@ public class PostsService {
 
         postsRepository.save(post);
         tagsService.setTagsForEditingPost(editPostRequest.getTags(),
-                                          post.getTags2Post(),
-                                          post.getId());
+                post.getTags2Post(),
+                post.getId());
 
         EditPostResponse editPostResponse = new EditPostResponse();
         editPostResponse.setResult(true);
@@ -427,25 +408,20 @@ public class PostsService {
     }
 
     public ResponseEntity<LikeDislikeResponse> addNewLike(LikeDislikeRequest likeDislikeRequest,
-                                                          Principal principal)
-    {
+                                                          Principal principal) {
         User user = userRepository.findByEmail(principal.getName());
         Post certainPost = postsRepository.getCertainPost(likeDislikeRequest.getPostId());
 
         PostVote postVoteByUserId = postVotesRepository.findPostVoteByUserId(user.getId(), certainPost.getId());
 
         PostVote postVote;
-        if(postVoteByUserId == null)
-        {
+        if (postVoteByUserId == null) {
             postVote = setNewLikeDislike(true,
-                                                   certainPost.getId(),
-                                                   user.getId());
+                    certainPost.getId(),
+                    user.getId());
             postVotesRepository.save(postVote);
-        }
-        else
-        {
-            if( postVoteByUserId.getValue() == 1)
-            {
+        } else {
+            if (postVoteByUserId.getValue() == 1) {
                 LikeDislikeResponse likeDislikeResponse = new LikeDislikeResponse();
                 likeDislikeResponse.setResult(false);
 
@@ -462,25 +438,20 @@ public class PostsService {
     }
 
     public ResponseEntity<LikeDislikeResponse> addNewDislike(LikeDislikeRequest likeDislikeRequest,
-                                                             Principal principal)
-    {
+                                                             Principal principal) {
         User user = userRepository.findByEmail(principal.getName());
         Post certainPost = postsRepository.getCertainPost(likeDislikeRequest.getPostId());
 
         PostVote postVoteByUserId = postVotesRepository.findPostVoteByUserId(user.getId(), certainPost.getId());
 
         PostVote postVote;
-        if(postVoteByUserId == null)
-        {
+        if (postVoteByUserId == null) {
             postVote = setNewLikeDislike(false,
                     certainPost.getId(),
                     user.getId());
             postVotesRepository.save(postVote);
-        }
-        else
-        {
-            if( postVoteByUserId.getValue() == -1)
-            {
+        } else {
+            if (postVoteByUserId.getValue() == -1) {
                 LikeDislikeResponse likeDislikeResponse = new LikeDislikeResponse();
                 likeDislikeResponse.setResult(false);
 
@@ -497,22 +468,17 @@ public class PostsService {
     }
 
 
-
     protected PostVote setNewLikeDislike(boolean isLike,
                                          int postId,
-                                         int userId)
-    {
+                                         int userId) {
         PostVote postVote = new PostVote();
         postVote.setUserId(userId);
         postVote.setPostId(postId);
         postVote.setTime(new Date());
 
-        if(isLike)
-        {
+        if (isLike) {
             postVote.setValue(1);
-        }
-        else
-        {
+        } else {
             postVote.setValue(0);
         }
 
@@ -525,15 +491,13 @@ public class PostsService {
         User moderator = userRepository.findByEmail(principal.getName());
         EditPostByModeratorResponse editPostByModeratorResponse = checkUser(moderator);
 
-        if (!editPostByModeratorResponse.isResult())
-        {
+        if (!editPostByModeratorResponse.isResult()) {
             return new ResponseEntity<>(editPostByModeratorResponse, HttpStatus.OK);
         }
 
         Post post = postsRepository.getCertainPost(editPostByModeratorRequest.getPostId());
 
-        if(post == null)
-        {
+        if (post == null) {
             editPostByModeratorResponse = new EditPostByModeratorResponse();
             editPostByModeratorResponse.setResult(true);
             HashMap<String, String> error = new HashMap<>();
@@ -545,16 +509,11 @@ public class PostsService {
             return new ResponseEntity<>(editPostByModeratorResponse, HttpStatus.OK);
         }
 
-        if(editPostByModeratorRequest.getDecision().equals("accept"))
-        {
+        if (editPostByModeratorRequest.getDecision().equals("accept")) {
             post.setModerationStatus(ModerationStatus.ACCEPTED);
-        }
-        else if(editPostByModeratorRequest.getDecision().equals("decline"))
-        {
+        } else if (editPostByModeratorRequest.getDecision().equals("decline")) {
             post.setModerationStatus(ModerationStatus.DECLINED);
-        }
-        else
-        {
+        } else {
             editPostByModeratorResponse = new EditPostByModeratorResponse();
             editPostByModeratorResponse.setResult(true);
             HashMap<String, String> error = new HashMap<>();
@@ -575,20 +534,16 @@ public class PostsService {
         return new ResponseEntity<>(editPostByModeratorResponse, HttpStatus.OK);
     }
 
-    protected EditPostByModeratorResponse checkUser(User user)
-    {
+    protected EditPostByModeratorResponse checkUser(User user) {
         EditPostByModeratorResponse editPostByModeratorResponse = new EditPostByModeratorResponse();
         editPostByModeratorResponse.setResult(true);
         HashMap<String, String> error = new HashMap<>();
         editPostByModeratorResponse.setErrors(error);
 
-        if(user == null)
-        {
+        if (user == null) {
             editPostByModeratorResponse.setResult(false);
             error.put("text", "Пользователь не авторизован!");
-        }
-        else if(user.getIsModerator() == 0)
-        {
+        } else if (user.getIsModerator() == 0) {
             editPostByModeratorResponse.setResult(false);
             error.put("text", "Пользователь не является модератором!");
         }
@@ -596,7 +551,7 @@ public class PostsService {
         return editPostByModeratorResponse;
     }
 
-    public ResponseEntity<CountOfPostsPerYearResponse> getCountOfPostsPerYear(int year){
+    public ResponseEntity<CountOfPostsPerYearResponse> getCountOfPostsPerYear(int year) {
         List<Post> posts = postsRepository.getCountOfPostsPerYear(year);
 
         CountOfPostsPerYearResponse countOfPostsPerYearResponse = new PostsMapperImpl().postToCountOfPostsPerYear(posts, year);

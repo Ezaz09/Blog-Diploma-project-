@@ -14,6 +14,7 @@ public class Main {
         SpringApplication.run(Main.class, args);
     }
 
+    //TODO Удалить данный бин и посмотреть, повлияло ли это на проект
     @Bean
     public ModelMapper modelMapper() {
         ModelMapper mapper = new ModelMapper();

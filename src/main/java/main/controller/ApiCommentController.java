@@ -24,8 +24,7 @@ public class ApiCommentController {
     @PostMapping(path = "")
     @PreAuthorize("hasAuthority('user:write')")
     public ResponseEntity<NewCommentResponse> addNewComment(@RequestBody CommentRequest commentRequest,
-                                                            Principal principal)
-    {
+                                                            Principal principal) {
         return commentService.addNewComment(commentRequest, principal);
     }
 }

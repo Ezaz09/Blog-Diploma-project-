@@ -1,6 +1,5 @@
 package main.model.enums;
 
-import main.model.enums.Permission;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.util.Set;
@@ -13,7 +12,7 @@ public enum Role {
 
     private final Set<Permission> permissions;
 
-    Role(Set<Permission> permissions){
+    Role(Set<Permission> permissions) {
         this.permissions = permissions;
     }
 

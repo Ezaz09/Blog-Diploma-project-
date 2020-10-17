@@ -13,8 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ApiGeneralController {
     private GlobalSettingsService globalSettingsService;
 
-    public ApiGeneralController(GlobalSettingsService globalSettingsService)
-    {
+    public ApiGeneralController(GlobalSettingsService globalSettingsService) {
         this.globalSettingsService = globalSettingsService;
     }
 
@@ -31,8 +30,7 @@ public class ApiGeneralController {
     }
 
     @GetMapping(path = "/api/settings")
-    public ResponseEntity<SettingsResponse> getGlobalSettings()
-    {
+    public ResponseEntity<SettingsResponse> getGlobalSettings() {
         return globalSettingsService.getGlobalSettings();
     }
 

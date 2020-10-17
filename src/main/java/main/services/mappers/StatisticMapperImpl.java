@@ -7,25 +7,22 @@ import java.util.List;
 
 public class StatisticMapperImpl {
     public StatisticResponse postsToStatisticResponse(List<Post> posts) {
-        if ( posts == null ) {
+        if (posts == null) {
             return null;
         }
 
         int postsCount = posts.size();
         int likesCount = 0;
-        int dislikesCount = 0 ;
+        int dislikesCount = 0;
         int viewsCount = 0;
         Long firstPublication = null;
-        for( Post post : posts ) {
+        for (Post post : posts) {
 
-            if(firstPublication == null)
-            {
+            if (firstPublication == null) {
                 firstPublication = (post.getTime().getTime()) / 1000;
-            }
-            else {
+            } else {
                 long dateOfPublication = (post.getTime().getTime()) / 1000;
-                if( firstPublication > dateOfPublication )
-                {
+                if (firstPublication > dateOfPublication) {
                     firstPublication = dateOfPublication;
                 }
             }

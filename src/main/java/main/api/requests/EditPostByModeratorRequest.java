@@ -11,6 +11,5 @@ import lombok.NoArgsConstructor;
 public class EditPostByModeratorRequest {
     @JsonProperty("post_id")
     private int postId;
-
     private String decision;
 }

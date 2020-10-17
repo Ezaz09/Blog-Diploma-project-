@@ -24,42 +24,35 @@ public class ApiProfileController {
     }
 
 
-
     @PostMapping(path = "/my")
     public ResponseEntity<ProfileResponse> editProfile(@RequestBody EditProfileRequestWithoutPhoto editProfileRequest,
-                                                       Principal principal)
-    {
+                                                       Principal principal) {
         ProfileResponse profileResponse = checkAuthentication(principal);
 
-        if(!profileResponse.isResult())
-        {
+        if (!profileResponse.isResult()) {
             return new ResponseEntity<>(profileResponse, HttpStatus.OK);
         }
 
         return profileService.editProfile(editProfileRequest, principal);
     }
 
-    @PostMapping(path = "/my",  consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    @PostMapping(path = "/my", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<ProfileResponse> editProfileWithPhoto(@ModelAttribute EditProfileRequestWithPhoto editProfileRequestWithPhoto,
-                                                                Principal principal)
-    {
+                                                                Principal principal) {
         ProfileResponse profileResponse = checkAuthentication(principal);
 
-        if(!profileResponse.isResult())
-        {
+        if (!profileResponse.isResult()) {
             return new ResponseEntity<>(profileResponse, HttpStatus.OK);
         }
 
         return profileService.editProfile(editProfileRequestWithPhoto, principal);
     }
 
-    private ProfileResponse checkAuthentication(Principal principal)
-    {
+    private ProfileResponse checkAuthentication(Principal principal) {
         ProfileResponse profileResponse = new ProfileResponse();
         profileResponse.setResult(true);
 
-        if (principal == null)
-        {
+        if (principal == null) {
             profileResponse.setResult(false);
 
             HashMap<String, String> errors = new HashMap<>();
@@ -70,5 +63,4 @@ public class ApiProfileController {
 
         return profileResponse;
     }
-
 }

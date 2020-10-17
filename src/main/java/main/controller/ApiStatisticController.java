@@ -20,9 +20,8 @@ public class ApiStatisticController {
     }
 
     @GetMapping(path = "/my")
-    public ResponseEntity<StatisticResponse> getUserPostsStatistics(Principal principal)
-    {
-        if (principal == null){
+    public ResponseEntity<StatisticResponse> getUserPostsStatistics(Principal principal) {
+        if (principal == null) {
             StatisticResponse statisticResponse = StatisticResponse.builder()
                     .postsCount(0)
                     .likesCount(0)
@@ -36,7 +35,7 @@ public class ApiStatisticController {
     }
 
     @GetMapping(path = "/all")
-    public  ResponseEntity<StatisticResponse> getAllPostsStatistics(Principal principal) throws Exception {
+    public ResponseEntity<StatisticResponse> getAllPostsStatistics(Principal principal) throws Exception {
         return statisticService.collectInformationAboutAllPosts(principal);
     }
 }
