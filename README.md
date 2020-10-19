@@ -1,9 +1,8 @@
 # Dev social network project
 This is mini social network for developers.
-You can use this project, how example, like a place where you can offer and discus some ideas.
+You can use this project, how example, like a place where you can offer and discuss some ideas.
 
-
-This project use spring boot security, so uou and your team don't gonna see some anonymous offers and comments.
+This project use spring boot security, so you and your team don't gonna see some anonymous offers and comments.
 
 And you can register some moderators, which is decides what kind of offers can be published.
 
