@@ -60,13 +60,14 @@ public class ApiAuthController {
 
     @GetMapping("/logout")
     public ResponseEntity<LogoutResponse> logout(Principal principal) {
+
         HttpHeaders headers = new HttpHeaders();
         headers.add("Location", "/");
 
-        ResponseEntity responseEntity = new ResponseEntity<>(null, headers, HttpStatus.FOUND);
-
         if (principal == null) {
-            return responseEntity;
+            LogoutResponse logoutResponse = new LogoutResponse();
+            logoutResponse.setResult(false);
+            return new ResponseEntity<>(logoutResponse, headers, HttpStatus.FOUND);
         }
 
         SecurityContextHolder

@@ -5,6 +5,7 @@ import main.api.responses.TagDTO;
 import main.api.responses.TagsResponse;
 import main.model.Tag;
 import main.model.Tag2Post;
+import main.model.repositories.PostsRepository;
 import main.model.repositories.Tag2PostRepository;
 import main.model.repositories.TagsRepository;
 import main.services.mappers.TagsMapperImpl;
@@ -21,16 +22,20 @@ public class TagsService {
 
     private final TagsRepository tagsRepository;
     private final Tag2PostRepository tag2PostRepository;
+    private final PostsRepository postsRepository;
 
     @Autowired
-    public TagsService(TagsRepository tagsRepository, Tag2PostRepository tag2PostRepository) {
+    public TagsService(TagsRepository tagsRepository,
+                       Tag2PostRepository tag2PostRepository,
+                       PostsRepository postsRepository) {
         this.tagsRepository = tagsRepository;
         this.tag2PostRepository = tag2PostRepository;
+        this.postsRepository = postsRepository;
     }
 
     public ResponseEntity<TagsResponse> getTags() {
         List<Tag> allTags = tagsRepository.findAll();
-        List<TagDTO> listOfTags = new TagsMapperImpl().tagsToTagsResponse(allTags);
+        List<TagDTO> listOfTags = new TagsMapperImpl(postsRepository).tagsToTagsResponse(allTags);
         TagsResponse tagsResponse = TagsResponse.builder()
                 .tags(listOfTags).build();
         return new ResponseEntity<>(tagsResponse, HttpStatus.OK);

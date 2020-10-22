@@ -58,7 +58,7 @@ public class PostsService {
     public ResponseEntity<PostResponse> getPosts(int offset,
                                                  int limit,
                                                  String mode) {
-        Sort sort = null;
+       /* Sort sort = null;
         switch (mode) {
             case "recent":
                 sort = Sort.by("time").descending();
@@ -72,9 +72,9 @@ public class PostsService {
             case "early":
                 sort = Sort.by("time").ascending();
                 break;
-        }
+        }*/
 
-        if (sort == null) {
+        if (mode.equals("")) {
             PostResponse postResponse = PostResponse.builder()
                     .count(0)
                     .posts(Collections.emptyList()).build();
@@ -86,8 +86,10 @@ public class PostsService {
             allPosts = postsRepository.getPostsSortByLikeVotes(PageRequest.of((offset / limit), limit));
         } else if (mode.equals("popular")) {
             allPosts = postsRepository.getPostsSortByComments(PageRequest.of((offset / limit), limit));
+        } else if (mode.equals("early")){
+            allPosts = postsRepository.getPostsSortByDateAsc(PageRequest.of((offset / limit), limit));
         } else {
-            allPosts = postsRepository.findAll(PageRequest.of(offset, limit, sort)).getContent();
+            allPosts = postsRepository.getPostsSortByDateDesc(PageRequest.of((offset / limit), limit));
         }
 
         List<PostDTO> listOfPosts = new PostsMapperImpl().postToPostResponse(allPosts);
@@ -185,18 +187,28 @@ public class PostsService {
 
     public ResponseEntity<CertainPostResponse> findPostById(int id,
                                                             Principal principal) {
-        Post post = postsRepository.getCertainPost(id);
+        User user = null;
+        if (principal != null) {
+            user = userRepository.findByEmail(principal.getName());
+        }
+
+        Post post;
+        if (user != null && user.getIsModerator() == 1) {
+            post = postsRepository.getCertainPostForModerators(id);
+        } else {
+            post = postsRepository.getCertainPost(id);
+        }
+
         if (post == null) {
             return new ResponseEntity(HttpStatus.NOT_FOUND);
         }
 
         int viewCount = post.getViewCount();
-        if (principal != null) {
-            User user = userRepository.findByEmail(principal.getName());
+
+        if(user != null) {
             if (user.getIsModerator() != 1
                     && user.getId() != post.getUser().getId()) {
                 post.setViewCount(post.getViewCount() + 1);
-
             }
         } else {
             post.setViewCount(post.getViewCount() + 1);
@@ -495,7 +507,7 @@ public class PostsService {
             return new ResponseEntity<>(editPostByModeratorResponse, HttpStatus.OK);
         }
 
-        Post post = postsRepository.getCertainPost(editPostByModeratorRequest.getPostId());
+        Post post = postsRepository.getCertainPostForModerators(editPostByModeratorRequest.getPostId());
 
         if (post == null) {
             editPostByModeratorResponse = new EditPostByModeratorResponse();

@@ -20,18 +20,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
+import javax.xml.bind.DatatypeConverter;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.security.Principal;
 import java.time.LocalDate;
-import java.util.Base64;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -116,12 +111,13 @@ public class ProfileService {
             byte[] fileContent = FileUtils.readFileToByteArray(file);
             String encodedString = Base64.getEncoder().encodeToString(fileContent);
 
-            captchaResponse.setSecret(secretCode);
+            String captchaID = UUID.randomUUID().toString();
+            captchaResponse.setSecret(captchaID);
             captchaResponse.setImage("data:image/png;base64, " + encodedString);
 
             CaptchaCode captchaCode = new CaptchaCode();
-            captchaCode.setSecretCode(secretCode);
-            captchaCode.setCode(encodedString);
+            captchaCode.setSecretCode(captchaID);
+            captchaCode.setCode(secretCode);
             captchaCode.setTime(new Date());
 
             captchaCodesRepository.save(captchaCode);
@@ -154,7 +150,7 @@ public class ProfileService {
         SimpleMailMessage passwordResetEmail = new SimpleMailMessage();
         passwordResetEmail.setTo(restorePasswordRequest.getEmail());
         passwordResetEmail.setSubject("Запрос на восстановление пароля");
-        passwordResetEmail.setText("Чтобы сменить пароль, кликните по ссылке:\\n "
+        passwordResetEmail.setText("Чтобы сменить пароль, кликните по ссылке: "
                 + appUrl + "/login/change-password/" + userByEmail.getCode());
 
         emailService.sendEmail(passwordResetEmail);
@@ -191,11 +187,6 @@ public class ProfileService {
 
         profileResponse.setResult(true);
         return new ResponseEntity<>(profileResponse, HttpStatus.OK);
-    }
-
-    protected boolean checkCaptcha(String captcha) {
-
-        return true;
     }
 
     protected ProfileResponse checkValuesFromRequest(String userEmail,
@@ -294,8 +285,10 @@ public class ProfileService {
             }
 
             String captcha = newProfileRequest.getCaptcha();
-            CaptchaCode captchaCodeBySecretCode = captchaCodesRepository.getCaptchaCodeBySecretCode(captcha);
-            if (captchaCodeBySecretCode == null) {
+            String captchaID = newProfileRequest.getCaptcha_secret();
+            boolean isPassed = checkCaptchaFromRequest(captcha, captchaID);
+
+            if (!isPassed) {
                 profileResponse.setResult(false);
                 errors.put("captcha", "Код с картинки введён неверно.");
             }
@@ -311,8 +304,10 @@ public class ProfileService {
             }
 
             String captcha = changePasswordRequest.getCaptcha();
-            CaptchaCode captchaCodeBySecretCode = captchaCodesRepository.getCaptchaCodeBySecretCode(captcha);
-            if (captchaCodeBySecretCode == null) {
+            String captchaID = changePasswordRequest.getCaptchaSecret();
+            boolean isPassed = checkCaptchaFromRequest(captcha, captchaID);
+
+            if (!isPassed) {
                 profileResponse.setResult(false);
                 errors.put("captcha", "Код с картинки введён неверно.");
             }
@@ -323,6 +318,12 @@ public class ProfileService {
             errors.put("server", "Произошла ошибка на сервере");
             return profileResponse;
         }
+    }
+
+    protected boolean checkCaptchaFromRequest(String captchaFromRequest, String captchaID) {
+        CaptchaCode captchaCodeBySecretCode = captchaCodesRepository.getCaptchaCodeBySecretCode(captchaID);
+
+        return captchaCodeBySecretCode.getCode().equals(captchaFromRequest);
     }
 
     protected ProfileResponse changeUserProfile(EditProfileRequestWithPhoto editProfileRequestWithPhoto,

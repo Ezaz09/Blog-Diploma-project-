@@ -16,25 +16,39 @@ import java.util.List;
 
 @Repository
 public interface PostsRepository extends JpaRepository<Post, Integer> {
-    @Query("From Post as p order by size(p.likeVotes) desc")
+    @Query("From Post as p where p.moderationStatus = 'ACCEPTED' order by size(p.likeVotes) desc")
     List<Post> getPostsSortByLikeVotes(PageRequest pR);
 
-    @Query("From Post as p order by size(p.comments) desc")
+    @Query("From Post as p where p.moderationStatus = 'ACCEPTED' order by size(p.comments) desc")
     List<Post> getPostsSortByComments(PageRequest pR);
 
-    @Query("From Post as p where p.id = :postId")
+    @Query("From Post as p where p.moderationStatus = 'ACCEPTED' order by p.time desc")
+    List<Post> getPostsSortByDateDesc(PageRequest pR);
+
+    @Query("From Post as p where p.moderationStatus = 'ACCEPTED' order by p.time asc")
+    List<Post> getPostsSortByDateAsc(PageRequest pR);
+
+    @Query("From Post as p where p.id = :postId" +
+            " AND p.moderationStatus = 'ACCEPTED'" +
+            " AND p.isActive = 1" +
+            " AND p.time <= current_date()")
     Post getCertainPost(@Param("postId") int postId);
 
-    @Query("From Post as p where p.title LIKE :query")
+    @Query("From Post as p where p.id = :postId" +
+            " AND p.isActive = 1")
+    Post getCertainPostForModerators(@Param("postId") int postId);
+
+    @Query("From Post as p where p.title LIKE :query AND p.moderationStatus = 'ACCEPTED'")
     List<Post> getPostsByQuery(Pageable pageable, @Param("query") String query);
 
-    @Query("From Post as p where p.time between :startOfDay and :endOfDay")
+    @Query("From Post as p where p.time between :startOfDay and :endOfDay AND p.moderationStatus = 'ACCEPTED'")
     List<Post> getPostsByDate(Pageable pageable, @Param("startOfDay") Date startOfDay, @Param("endOfDay") Date endOfDay);
 
     @Query("From Post as p " +
             " LEFT JOIN Tag2Post as t2p ON p.id = t2p.postId" +
             " LEFT JOIN Tag as t ON t2p.tag = t.id" +
-            " WHERE t.name = :tag")
+            " WHERE t.name = :tag" +
+            " AND p.moderationStatus = 'ACCEPTED'")
     List<Post> getPostsByTag(Pageable pageable, @Param("tag") String tag);
 
     @Query("From Post as p where p.user = :user")
