@@ -1,12 +1,16 @@
 package main.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 
 @Entity
 @Data
 @Table(name = "tag2post")
+@AllArgsConstructor
+@NoArgsConstructor
 public class Tag2Post {
 
     @Id
@@ -17,6 +21,7 @@ public class Tag2Post {
     @Column(name = "post_id", nullable = false)
     private int postId;
 
-    @Column(name = "tag_id", nullable = false)
-    private int tagId;
+    @OneToOne
+    @JoinColumn(name = "tag_id", referencedColumnName = "id")
+    private Tag tag;
 }

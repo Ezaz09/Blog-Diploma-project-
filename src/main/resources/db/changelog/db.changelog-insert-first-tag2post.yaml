@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - logicalFilePath: db.changelog/db.changelog-insert-first-like-for-first-post.yaml
+  - changeSet:
+      id: 18
+      author: master
+      changes:
+          - insert:
+              tableName: tag2post
+              columns:
+                - column:
+                    name: id
+                    value: "1"
+                - column:
+                    name: post_id
+                    value: "1"
+                - column:
+                    name: tag_id
+                    value: "1"

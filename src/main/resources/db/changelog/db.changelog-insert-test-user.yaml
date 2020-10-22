@@ -1,0 +1,31 @@
+databaseChangeLog:
+  - logicalFilePath: db.changelog/db.changelog-insert-test-user.yaml
+  - changeSet:
+      id: 9
+      author: master
+      changes:
+          - insert:
+              tableName: users
+              columns:
+                - column:
+                    name: is_moderator
+                    value: "0"
+                - column:
+                    name: reg_time
+                    value: "now()"
+                - column:
+                    name: name
+                    value: "test"
+                - column:
+                    name: email
+                    value: "test@mail.ru"
+                - column:
+                    name: password
+                    value: "testpass"
+                - column:
+                    name: code
+                    value: "testcode"
+                - column:
+                    name: photo
+                    value: "testphoto"
+

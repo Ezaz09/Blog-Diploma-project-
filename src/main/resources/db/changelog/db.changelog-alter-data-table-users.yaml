@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - logicalFilePath: db.changelog/db.changelog-insert-first-comment-for-first-post.yaml
+  - changeSet:
+      id: 20
+      author: master
+      changes:
+      - update:
+         columns:
+           - column:
+               name: password
+               value: $2y$12$DblyaZml5I603.xxWfqEF.YI5/Gr0wku/Mw/caOYU/0yOnDd12Hpq
+         tableName: users
+         where: name = 'test'
+      - update:
+          columns:
+            - column:
+                name: password
+                value: $2y$12$OBqVr/YezxqcAn0s0u8e1.GNsrEUb0Ud/pqd2t9LVs1kYUJfCDLE2
+          tableName: users
+          where: name = 'mainModerator'
+
