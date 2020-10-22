@@ -23,3 +23,4 @@ This needs to made how for spring.datasource properties and as well as for sprin
 - Write properties for "Email service" in "application.properties". It's needs for sends restore password links to users. 
 I'm using for this gmail, so if you wanna used for this something else, don't forget to rewrite other properties, like  "spring.mail.host". 
 
+
