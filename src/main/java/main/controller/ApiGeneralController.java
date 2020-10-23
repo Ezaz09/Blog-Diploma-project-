@@ -2,11 +2,9 @@ package main.controller;
 
 import main.api.requests.ChangeGlobalSettingsRequest;
 import main.api.responses.ChangeGlobalSettingsResponse;
-import main.api.responses.LogoutResponse;
 import main.api.responses.ResponseInit;
 import main.api.responses.SettingsResponse;
 import main.services.GlobalSettingsService;
-import main.services.ProfileService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
