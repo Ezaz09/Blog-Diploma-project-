@@ -31,7 +31,7 @@ public interface PostsRepository extends JpaRepository<Post, Integer> {
     @Query("From Post as p where p.id = :postId" +
             " AND p.moderationStatus = 'ACCEPTED'" +
             " AND p.isActive = 1" +
-            " AND p.time <= current_date()")
+            " AND date(p.time) <= current_date()")
     Post getCertainPost(@Param("postId") int postId);
 
     @Query("From Post as p where p.id = :postId" +

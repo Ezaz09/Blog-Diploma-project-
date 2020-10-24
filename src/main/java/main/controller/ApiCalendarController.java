@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.text.ParseException;
 import java.util.Calendar;
 
 @RestController
@@ -24,7 +23,7 @@ public class ApiCalendarController {
     }
 
     @GetMapping(path = "")
-    public ResponseEntity<CountOfPostsPerYearResponse> countOfPostsPerYear(@RequestParam(defaultValue = "0", required = false) int year) throws ParseException {
+    public ResponseEntity<CountOfPostsPerYearResponse> countOfPostsPerYear(@RequestParam(defaultValue = "0", required = false) int year){
         if (year == 0) {
             year = Calendar.getInstance().get(Calendar.YEAR);
         }

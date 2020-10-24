@@ -424,6 +424,12 @@ public class PostsService {
         User user = userRepository.findByEmail(principal.getName());
         Post certainPost = postsRepository.getCertainPost(likeDislikeRequest.getPostId());
 
+        if(certainPost == null) {
+            LikeDislikeResponse likeDislikeResponse = new LikeDislikeResponse();
+            likeDislikeResponse.setResult(false);
+            return new ResponseEntity<>(likeDislikeResponse, HttpStatus.OK);
+        }
+
         PostVote postVoteByUserId = postVotesRepository.findPostVoteByUserId(user.getId(), certainPost.getId());
 
         PostVote postVote;
