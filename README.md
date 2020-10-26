@@ -18,6 +18,13 @@ And you can register some moderators, which is decides what kind of offers can b
     - Vue.js
 
 # How to run 
+- Initialize next environment variables: 
+    - GMAIL_USERNAME
+    - GMAIL_PASSWORD
+    - JAWSDB_URL
+    
+If you don't want to safe photos on server, You need initialize "CLOUDINARY_URL" and change every call "uploadImageOnServer" to "uploadImageOnCloudinary".
+
 - After a download, write in "application.properties" url path to your database, username and password.
 This needs to made how for spring.datasource properties and as well as for spring.liquibase properties.   
 - Write properties for "Email service" in "application.properties". It's needs for sends restore password links to users. 
