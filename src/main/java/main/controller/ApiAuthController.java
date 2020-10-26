@@ -36,6 +36,7 @@ public class ApiAuthController {
     private final ProfileService profileService;
 
 
+
     @Autowired
     public ApiAuthController(AuthenticationManager authenticationManager,
                              UserRepository userRepository,
@@ -123,7 +124,13 @@ public class ApiAuthController {
     @PostMapping(path = "/restore")
     public ResponseEntity<RestorePasswordResponse> restorePassword(@RequestBody RestorePasswordRequest restorePasswordRequest,
                                                                    HttpServletRequest request) {
-        String appUrl = request.getScheme() + "://" + request.getServerName() + ":8080";
+        String appUrl;
+        if(request.getServerName().equals("localhost")) {
+            appUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
+        } else {
+            appUrl = request.getScheme() + "://" + request.getServerName();
+        }
+
         return profileService.restorePassword(restorePasswordRequest, appUrl);
     }
 

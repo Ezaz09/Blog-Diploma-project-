@@ -195,6 +195,11 @@ public class PostsService {
         Post post;
         if (user != null && user.getIsModerator() == 1) {
             post = postsRepository.getCertainPostForModerators(id);
+        } else if(user !=null && user.getIsModerator() != 1){
+            post = postsRepository.getCertainPostForModerators(id);
+            if(post.getUser() != user) {
+                post = null;
+            }
         } else {
             post = postsRepository.getCertainPost(id);
         }
