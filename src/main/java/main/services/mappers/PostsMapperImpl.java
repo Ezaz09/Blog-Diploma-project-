@@ -119,7 +119,8 @@ public class PostsMapperImpl {
 
     public Post postRequestToPost(PostRequest postRequest,
                                   User user,
-                                  User moderator) {
+                                  User moderator,
+                                  boolean needModeration) {
         if (postRequest == null) {
             return null;
         }
@@ -127,7 +128,13 @@ public class PostsMapperImpl {
         Post post = new Post();
 
         post.setIsActive(postRequest.getActive());
-        post.setModerationStatus(ModerationStatus.NEW);
+
+        if(user.getIsModerator() == 0 && needModeration) {
+            post.setModerationStatus(ModerationStatus.NEW);
+        } else {
+            post.setModerationStatus(ModerationStatus.ACCEPTED);
+        }
+
         post.setModerator(moderator);
         post.setUser(user);
         post.setTime(new Date(postRequest.getTimestamp() * 1000));

@@ -38,7 +38,8 @@ public interface PostsRepository extends JpaRepository<Post, Integer> {
             " AND p.isActive = 1")
     Post getCertainPostForModerators(@Param("postId") int postId);
 
-    @Query("From Post as p where p.title LIKE :query AND p.moderationStatus = 'ACCEPTED'")
+    @Query("From Post as p where p.title LIKE :query " +
+            "AND p.moderationStatus = 'ACCEPTED'")
     List<Post> getPostsByQuery(Pageable pageable, @Param("query") String query);
 
     @Query("From Post as p where p.time between :startOfDay and :endOfDay AND p.moderationStatus = 'ACCEPTED'")
@@ -77,6 +78,6 @@ public interface PostsRepository extends JpaRepository<Post, Integer> {
             " and p.moderationStatus = :status")
     List<Post> getModeratorPosts(Pageable pageable, @Param("userId") User moderator, @Param("status") ModerationStatus moderationStatus);
 
-    @Query("From Post as p where year(p.time) = :year order by p.time desc ")
+    @Query("From Post as p where year(p.time) = :year and p.moderationStatus = 'ACCEPTED' order by p.time desc ")
     List<Post> getCountOfPostsPerYear(@Param("year") Integer year);
 }

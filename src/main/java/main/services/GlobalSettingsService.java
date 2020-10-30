@@ -9,6 +9,7 @@ import main.model.User;
 import main.model.repositories.GlobalSettingsRepository;
 import main.model.repositories.UserRepository;
 import main.services.mappers.SettingsMapperImpl;
+import org.apache.tomcat.jni.Global;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +36,10 @@ public class GlobalSettingsService {
         List<GlobalSetting> allGlobalSettings = globalSettingsRepository.findAll();
         SettingsResponse settingsResponse = new SettingsMapperImpl().settingsToSettingsResponse(allGlobalSettings);
         return new ResponseEntity<>(settingsResponse, HttpStatus.OK);
+    }
+
+    public GlobalSetting getGlobalSettingForAPIByName(String nameOfGlobalSetting) {
+        return globalSettingsRepository.findGlobalSettingByName(nameOfGlobalSetting);
     }
 
     public ResponseEntity<ChangeGlobalSettingsResponse> changeGlobalSettings(ChangeGlobalSettingsRequest changeGlobalSettingsRequest, String userEmail) {

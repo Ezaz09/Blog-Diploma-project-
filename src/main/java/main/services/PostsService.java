@@ -6,7 +6,9 @@ import main.api.requests.EditPostRequest;
 import main.api.requests.LikeDislikeRequest;
 import main.api.requests.PostRequest;
 import main.api.responses.LikeDislikeResponse;
+import main.api.responses.SettingsResponse;
 import main.api.responses.post_responses.*;
+import main.model.GlobalSetting;
 import main.model.Post;
 import main.model.PostVote;
 import main.model.User;
@@ -18,7 +20,6 @@ import main.services.mappers.PostsMapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -43,37 +44,24 @@ public class PostsService {
 
     private final TagsService tagsService;
 
+    private final GlobalSettingsService globalSettingsService;
 
     @Autowired
     public PostsService(PostsRepository postsRepository,
                         UserRepository userRepository,
                         PostVotesRepository postVotesRepository,
-                        TagsService tagsService) {
+                        TagsService tagsService,
+                        GlobalSettingsService globalSettingsService) {
         this.postsRepository = postsRepository;
         this.userRepository = userRepository;
         this.postVotesRepository = postVotesRepository;
         this.tagsService = tagsService;
+        this.globalSettingsService = globalSettingsService;
     }
 
     public ResponseEntity<PostResponse> getPosts(int offset,
                                                  int limit,
                                                  String mode) {
-       /* Sort sort = null;
-        switch (mode) {
-            case "recent":
-                sort = Sort.by("time").descending();
-                break;
-            case "popular":
-                sort = Sort.by(Sort.Order.desc("comments"));
-                break;
-            case "best":
-                sort = Sort.by(Sort.Order.desc("likeVotes"));
-                break;
-            case "early":
-                sort = Sort.by("time").ascending();
-                break;
-        }*/
-
         if (mode.equals("")) {
             PostResponse postResponse = PostResponse.builder()
                     .count(0)
@@ -86,7 +74,7 @@ public class PostsService {
             allPosts = postsRepository.getPostsSortByLikeVotes(PageRequest.of((offset / limit), limit));
         } else if (mode.equals("popular")) {
             allPosts = postsRepository.getPostsSortByComments(PageRequest.of((offset / limit), limit));
-        } else if (mode.equals("early")){
+        } else if (mode.equals("early")) {
             allPosts = postsRepository.getPostsSortByDateAsc(PageRequest.of((offset / limit), limit));
         } else {
             allPosts = postsRepository.getPostsSortByDateDesc(PageRequest.of((offset / limit), limit));
@@ -188,20 +176,15 @@ public class PostsService {
     public ResponseEntity<CertainPostResponse> findPostById(int id,
                                                             Principal principal) {
         User user = null;
-        if (principal != null) {
-            user = userRepository.findByEmail(principal.getName());
+        Post post = null;
+        HashMap<String, Object> userAndPost = getUserAndPost(principal, id);
+
+        if (userAndPost.containsKey("post")) {
+            post = (Post) userAndPost.get("post");
         }
 
-        Post post;
-        if (user != null && user.getIsModerator() == 1) {
-            post = postsRepository.getCertainPostForModerators(id);
-        } else if(user !=null && user.getIsModerator() != 1){
-            post = postsRepository.getCertainPostForModerators(id);
-            if(post.getUser() != user) {
-                post = null;
-            }
-        } else {
-            post = postsRepository.getCertainPost(id);
+        if (userAndPost.containsKey("user")) {
+            user = (User) userAndPost.get("user");
         }
 
         if (post == null) {
@@ -210,7 +193,7 @@ public class PostsService {
 
         int viewCount = post.getViewCount();
 
-        if(user != null) {
+        if (user != null) {
             if (user.getIsModerator() != 1
                     && user.getId() != post.getUser().getId()) {
                 post.setViewCount(post.getViewCount() + 1);
@@ -313,12 +296,30 @@ public class PostsService {
 
     public ResponseEntity<NewPostResponse> addNewPost(PostRequest postRequest,
                                                       Principal principal) {
+        PageRequest pageRequest = PageRequest.of(0, 10);
         User user = userRepository.findByEmail(principal.getName());
-        User moderator = userRepository.findModerator();
+        List<User> moderatorList = userRepository.findModerator(pageRequest);
+
+        int max = moderatorList.size() - 1;
+        int rand = (int) (Math.random() * ++max);
+        User moderator = moderatorList.get(rand);
+
+        GlobalSetting postPremoderation = globalSettingsService.getGlobalSettingForAPIByName("POST_PREMODERATION");
+        boolean needModeration = true;
+
+        if(postPremoderation != null)
+        {
+            if(postPremoderation.getValue().equals("false")) {
+                needModeration = false;
+            } else {
+                needModeration = true;
+            }
+        }
 
         Post newPost = new PostsMapperImpl().postRequestToPost(postRequest,
                 user,
-                moderator);
+                moderator,
+                needModeration);
 
         if (newPost == null) {
             NewPostResponse newPostResponse = new NewPostResponse();
@@ -330,22 +331,12 @@ public class PostsService {
         String editPostRequestTitle = postRequest.getTitle();
         String editPostRequestText = postRequest.getText();
 
-        if (editPostRequestTitle.length() < 3 ||
-                editPostRequestText.length() < 50) {
-            NewPostResponse newPostResponse = new NewPostResponse();
+        NewPostResponse newPostResponse = new NewPostResponse();
+
+        HashMap<String, String> errors = checkParamsOfPost(editPostRequestText, editPostRequestTitle);
+
+        if (!errors.isEmpty()) {
             newPostResponse.setResult(false);
-
-            HashMap<String, String> errors = new HashMap<>();
-
-            if (editPostRequestTitle.length() < 3) {
-                errors.put("title", "Заголовок слишком короткий");
-            }
-
-            if (editPostRequestText.length() < 50) {
-                errors.put("text", "Текст публикации слишком короткий");
-            }
-
-
             newPostResponse.setErrors(errors);
             return new ResponseEntity<>(newPostResponse, HttpStatus.OK);
         }
@@ -354,7 +345,7 @@ public class PostsService {
         tagsService.setTagsForNewPost(postRequest.getTags(),
                 newPost.getId());
 
-        NewPostResponse newPostResponse = new NewPostResponse();
+
         newPostResponse.setResult(true);
 
         return new ResponseEntity<>(newPostResponse, HttpStatus.OK);
@@ -363,7 +354,17 @@ public class PostsService {
     public ResponseEntity<EditPostResponse> editPost(int id,
                                                      EditPostRequest editPostRequest,
                                                      Principal principal) {
-        Post post = postsRepository.getCertainPost(id);
+        User user = null;
+        Post post = null;
+        HashMap<String, Object> userAndPost = getUserAndPost(principal, id);
+
+        if (userAndPost.containsKey("post")) {
+            post = (Post) userAndPost.get("post");
+        }
+
+        if (userAndPost.containsKey("user")) {
+            user = (User) userAndPost.get("user");
+        }
 
         if (post == null) {
             EditPostResponse editPostResponse = new EditPostResponse();
@@ -381,33 +382,19 @@ public class PostsService {
         String editPostRequestTitle = editPostRequest.getTitle();
         String editPostRequestText = editPostRequest.getText();
 
-        if (editPostRequestTitle.length() < 3 ||
-                editPostRequestText.length() < 50) {
-            EditPostResponse editPostResponse = new EditPostResponse();
+        EditPostResponse editPostResponse = new EditPostResponse();
+        HashMap<String, String> errors = checkParamsOfPost(editPostRequestText, editPostRequestTitle);
+
+        if (!errors.isEmpty()) {
             editPostResponse.setResult(false);
-
-            HashMap<String, String> errors = new HashMap<>();
-
-            if (editPostRequestTitle.length() < 3) {
-                errors.put("title", "Заголовок слишком короткий");
-            }
-
-            if (editPostRequestText.length() < 50) {
-                errors.put("text", "Текст публикации слишком короткий");
-            }
-
             editPostResponse.setErrors(errors);
             return new ResponseEntity<>(editPostResponse, HttpStatus.OK);
         }
 
-        User user = userRepository.findByEmail(principal.getName());
         boolean changeStatus;
 
-        if (user.getIsModerator() == 1) {
-            changeStatus = false;
-        } else {
-            changeStatus = true;
-        }
+        assert user != null;
+        changeStatus = user.getIsModerator() != 1;
 
         post = new PostsMapperImpl().editPost(editPostRequest,
                 post,
@@ -418,10 +405,26 @@ public class PostsService {
                 post.getTags2Post(),
                 post.getId());
 
-        EditPostResponse editPostResponse = new EditPostResponse();
         editPostResponse.setResult(true);
 
         return new ResponseEntity<>(editPostResponse, HttpStatus.OK);
+    }
+
+    private HashMap<String, String> checkParamsOfPost(String editPostRequestText,
+                                                      String editPostRequestTitle) {
+        HashMap<String, String> errors = new HashMap<>();
+        if (editPostRequestTitle.length() < 3 ||
+                editPostRequestText.length() < 50) {
+
+            if (editPostRequestTitle.length() < 3) {
+                errors.put("title", "Заголовок слишком короткий");
+            }
+
+            if (editPostRequestText.length() < 50) {
+                errors.put("text", "Текст публикации слишком короткий");
+            }
+        }
+        return errors;
     }
 
     public ResponseEntity<LikeDislikeResponse> addNewLike(LikeDislikeRequest likeDislikeRequest,
@@ -429,7 +432,7 @@ public class PostsService {
         User user = userRepository.findByEmail(principal.getName());
         Post certainPost = postsRepository.getCertainPost(likeDislikeRequest.getPostId());
 
-        if(certainPost == null) {
+        if (certainPost == null) {
             LikeDislikeResponse likeDislikeResponse = new LikeDislikeResponse();
             likeDislikeResponse.setResult(false);
             return new ResponseEntity<>(likeDislikeResponse, HttpStatus.OK);
@@ -491,7 +494,7 @@ public class PostsService {
     }
 
 
-    protected PostVote setNewLikeDislike(boolean isLike,
+    private PostVote setNewLikeDislike(boolean isLike,
                                          int postId,
                                          int userId) {
         PostVote postVote = new PostVote();
@@ -557,7 +560,7 @@ public class PostsService {
         return new ResponseEntity<>(editPostByModeratorResponse, HttpStatus.OK);
     }
 
-    protected EditPostByModeratorResponse checkUser(User user) {
+    private EditPostByModeratorResponse checkUser(User user) {
         EditPostByModeratorResponse editPostByModeratorResponse = new EditPostByModeratorResponse();
         editPostByModeratorResponse.setResult(true);
         HashMap<String, String> error = new HashMap<>();
@@ -580,6 +583,42 @@ public class PostsService {
         CountOfPostsPerYearResponse countOfPostsPerYearResponse = new PostsMapperImpl().postToCountOfPostsPerYear(posts, year);
 
         return new ResponseEntity<>(countOfPostsPerYearResponse, HttpStatus.OK);
+    }
+
+    private HashMap<String, Object> getUserAndPost(Principal principal,
+                                                   int id) {
+        HashMap<String, Object> results = new HashMap<>();
+
+        User user = null;
+        if (principal != null) {
+            user = userRepository.findByEmail(principal.getName());
+        }
+
+        Post post;
+        if (user != null && user.getIsModerator() == 1) {
+            post = postsRepository.getCertainPostForModerators(id);
+        } else if (user != null && user.getIsModerator() != 1) {
+            post = postsRepository.getCertainPostForModerators(id);
+
+            if (post.getModerationStatus() != ModerationStatus.ACCEPTED) {
+                if (post.getUser() != user) {
+                    post = null;
+                }
+            }
+        } else {
+            post = postsRepository.getCertainPost(id);
+        }
+
+        if (post == null) {
+            results.put("error", "Пост не найден!");
+        } else {
+            results.put("post", post);
+            if (user != null) {
+                results.put("user", user);
+            }
+        }
+
+        return results;
     }
 }
 

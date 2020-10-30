@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.Collections;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/post")
@@ -96,7 +97,7 @@ public class ApiPostController {
         if (principal == null) {
             LikeDislikeResponse likeDislikeResponse = new LikeDislikeResponse();
             likeDislikeResponse.setResult(false);
-            return new ResponseEntity<>(likeDislikeResponse, HttpStatus.NETWORK_AUTHENTICATION_REQUIRED);
+            return new ResponseEntity<>(likeDislikeResponse, HttpStatus.OK);
         }
 
         return postsService.addNewLike(likeDislikeRequest, principal);
@@ -108,7 +109,7 @@ public class ApiPostController {
         if (principal == null) {
             LikeDislikeResponse likeDislikeResponse = new LikeDislikeResponse();
             likeDislikeResponse.setResult(false);
-            return new ResponseEntity<>(likeDislikeResponse, HttpStatus.NETWORK_AUTHENTICATION_REQUIRED);
+            return new ResponseEntity<>(likeDislikeResponse, HttpStatus.OK);
         }
 
         return postsService.addNewDislike(likeDislikeRequest, principal);

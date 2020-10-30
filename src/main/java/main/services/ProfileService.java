@@ -174,8 +174,9 @@ public class ProfileService {
             profileResponse.setResult(false);
             HashMap<String, String> errors = new HashMap<>();
             errors.put("code", "код восстановления пароля неверный или устарел." +
-                    "<a href=\n" +
-                    "\t\t\t\t\\\"/auth/restore\\\">Запросить ссылку снова</a>\"");
+                    "<a href= \n" +
+                    "/login/restore-password>Запросить ссылку снова</a>");
+            profileResponse.setErrors(errors);
             return new ResponseEntity<>(profileResponse, HttpStatus.OK);
         }
 

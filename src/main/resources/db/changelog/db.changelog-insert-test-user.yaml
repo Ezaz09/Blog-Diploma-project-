@@ -22,10 +22,3 @@ databaseChangeLog:
                 - column:
                     name: password
                     value: "testpass"
-                - column:
-                    name: code
-                    value: "testcode"
-                - column:
-                    name: photo
-                    value: "testphoto"
-

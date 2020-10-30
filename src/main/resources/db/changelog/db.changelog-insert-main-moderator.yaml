@@ -22,10 +22,5 @@ databaseChangeLog:
                 - column:
                     name: password
                     value: "moderatorPass"
-                - column:
-                    name: code
-                    value: "moderatorCode"
-                - column:
-                    name: photo
-                    value: "moderatorPhoto"
+
 
