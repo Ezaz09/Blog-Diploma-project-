@@ -23,7 +23,7 @@ public class PostsMapperImpl {
             return null;
         }
 
-        List<PostDTO> list = new ArrayList<PostDTO>(posts.size());
+        List<PostDTO> list = new ArrayList<>(posts.size());
         for (Post post1 : posts) {
             list.add(postToPostDTO(post1));
         }
@@ -44,7 +44,10 @@ public class PostsMapperImpl {
         }
         postDTO.setUser(usersToUserResponse(post.getUser()));
         postDTO.setTitle(post.getTitle());
-        postDTO.setAnnounce(post.getTitle());
+
+        String announce = post.getText().replaceAll("<[^>]*>", "");
+        postDTO.setAnnounce(announce);
+
         postDTO.setLikeCount(post.getLikeVotes().size());
         postDTO.setDislikeCount(post.getDislikeVotes().size());
         postDTO.setViewCount(post.getViewCount());

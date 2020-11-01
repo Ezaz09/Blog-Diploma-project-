@@ -21,13 +21,13 @@ And you can register some moderators, which is decides what kind of offers can b
 - Initialize next environment variables: 
     - GMAIL_USERNAME
     - GMAIL_PASSWORD
-    - JAWSDB_URL
     
 If you don't want to safe photos on server, You need initialize "CLOUDINARY_URL" and change every call "uploadImageOnServer" to "uploadImageOnCloudinary".
 
-- After a download, write in "application.properties" url path to your database, username and password.
+- After a download, write in "application-dev.properties" url path to your database, username and password.
 This needs to made how for spring.datasource properties and as well as for spring.liquibase properties.   
-- Write properties for "Email service" in "application.properties". It's needs for sends restore password links to users. 
+- Write properties for "Email service" in "application-dev.properties". It's needs for sends restore password links to users. 
 I'm using for this gmail, so if you wanna used for this something else, don't forget to rewrite other properties, like  "spring.mail.host". 
+- Change in "application.properties" parameter "spring.profiles.active" from prod to dev, if it's needed.
 
 
