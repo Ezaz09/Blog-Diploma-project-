@@ -38,7 +38,7 @@ public interface PostsRepository extends JpaRepository<Post, Integer> {
             " AND p.isActive = 1")
     Post getCertainPostForModerators(@Param("postId") int postId);
 
-    @Query("From Post as p where p.title LIKE :query " +
+    @Query("From Post as p where p.title LIKE :query% " +
             "AND p.moderationStatus = 'ACCEPTED'")
     List<Post> getPostsByQuery(Pageable pageable, @Param("query") String query);
 
