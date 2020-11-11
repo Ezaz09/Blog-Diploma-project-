@@ -30,4 +30,5 @@ This needs to made how for spring.datasource properties and as well as for sprin
 I'm using for this gmail, so if you wanna used for this something else, don't forget to rewrite other properties, like  "spring.mail.host". 
 - Change in "application.properties" parameter "spring.profiles.active" from prod to dev, if it's needed.
 
-
+# Link to deploy 
+https://blog-diploma-project.herokuapp.com/posts/recent
