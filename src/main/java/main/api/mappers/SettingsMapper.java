@@ -1,11 +1,11 @@
-package main.services.mappers;
+package main.api.mappers;
 
 import main.api.responses.SettingsResponse;
 import main.model.GlobalSetting;
 
 import java.util.List;
 
-public class SettingsMapperImpl {
+public class SettingsMapper {
     public SettingsResponse settingsToSettingsResponse(List<GlobalSetting> settings) {
         if (settings == null) {
             return null;

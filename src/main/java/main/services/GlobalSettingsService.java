@@ -7,9 +7,8 @@ import main.api.responses.SettingsResponse;
 import main.model.GlobalSetting;
 import main.model.User;
 import main.model.repositories.GlobalSettingsRepository;
-import main.model.repositories.UserRepository;
-import main.services.mappers.SettingsMapperImpl;
-import org.apache.tomcat.jni.Global;
+import main.model.repositories.UsersRepository;
+import main.api.mappers.SettingsMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,18 +22,18 @@ import java.util.List;
 public class GlobalSettingsService {
 
     private final GlobalSettingsRepository globalSettingsRepository;
-    private final UserRepository userRepository;
+    private final UsersRepository usersRepository;
 
     @Autowired
     public GlobalSettingsService(GlobalSettingsRepository globalSettingsRepository,
-                                 UserRepository userRepository) {
+                                 UsersRepository usersRepository) {
         this.globalSettingsRepository = globalSettingsRepository;
-        this.userRepository = userRepository;
+        this.usersRepository = usersRepository;
     }
 
     public ResponseEntity<SettingsResponse> getGlobalSettings() {
         List<GlobalSetting> allGlobalSettings = globalSettingsRepository.findAll();
-        SettingsResponse settingsResponse = new SettingsMapperImpl().settingsToSettingsResponse(allGlobalSettings);
+        SettingsResponse settingsResponse = new SettingsMapper().settingsToSettingsResponse(allGlobalSettings);
         return new ResponseEntity<>(settingsResponse, HttpStatus.OK);
     }
 
@@ -75,7 +74,7 @@ public class GlobalSettingsService {
     }
 
     private ChangeGlobalSettingsResponse checkUser(String userEmail) {
-        User user = userRepository.findByEmail(userEmail);
+        User user = usersRepository.findByEmail(userEmail);
         ChangeGlobalSettingsResponse changeGlobalSettingsResponse = new ChangeGlobalSettingsResponse();
         changeGlobalSettingsResponse.setResult(true);
         if(user == null)

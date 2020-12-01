@@ -1,11 +1,11 @@
-package main.services.mappers;
+package main.api.mappers;
 
 import main.api.responses.StatisticResponse;
 import main.model.Post;
 
 import java.util.List;
 
-public class StatisticMapperImpl {
+public class StatisticMapper {
     public StatisticResponse postsToStatisticResponse(List<Post> posts) {
         if (posts == null) {
             return null;

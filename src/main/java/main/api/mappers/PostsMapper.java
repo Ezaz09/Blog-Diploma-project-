@@ -1,4 +1,4 @@
-package main.services.mappers;
+package main.api.mappers;
 
 import main.api.requests.EditPostRequest;
 import main.api.requests.PostRequest;
@@ -9,6 +9,7 @@ import main.api.responses.post_responses.PostDTO;
 import main.api.responses.user_response.UserResponse;
 import main.model.*;
 import main.model.enums.ModerationStatus;
+import org.springframework.stereotype.Component;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -16,7 +17,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-public class PostsMapperImpl {
+@Component
+public class PostsMapper {
 
     public List<PostDTO> postToPostResponse(List<Post> posts) {
         if (posts == null) {

@@ -1,4 +1,4 @@
-package main.services.mappers;
+package main.api.mappers;
 
 import main.api.requests.CommentRequest;
 import main.model.PostComment;
@@ -6,7 +6,7 @@ import main.model.User;
 
 import java.util.Date;
 
-public class CommentMapperImpl {
+public class CommentMapper {
 
     public PostComment commentRequestToPostComment(CommentRequest commentRequest,
                                                    User user) {

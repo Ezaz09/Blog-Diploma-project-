@@ -7,8 +7,8 @@ import main.model.Post;
 import main.model.User;
 import main.model.repositories.GlobalSettingsRepository;
 import main.model.repositories.PostsRepository;
-import main.model.repositories.UserRepository;
-import main.services.mappers.StatisticMapperImpl;
+import main.model.repositories.UsersRepository;
+import main.api.mappers.StatisticMapper;
 import org.apache.http.HttpException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -22,20 +22,20 @@ import java.util.List;
 @Service
 public class StatisticService {
     private final PostsRepository postsRepository;
-    private final UserRepository userRepository;
+    private final UsersRepository usersRepository;
     private final GlobalSettingsRepository globalSettingsRepository;
 
     @Autowired
     public StatisticService(PostsRepository postsRepository,
-                            UserRepository userRepository,
+                            UsersRepository usersRepository,
                             GlobalSettingsRepository globalSettingsRepository) {
         this.postsRepository = postsRepository;
-        this.userRepository = userRepository;
+        this.usersRepository = usersRepository;
         this.globalSettingsRepository = globalSettingsRepository;
     }
 
     public ResponseEntity<StatisticResponse> collectInformationAboutUserPosts(Principal principal) {
-        User user = userRepository.findByEmail(principal.getName());
+        User user = usersRepository.findByEmail(principal.getName());
         List<Post> userPosts = postsRepository.getUserPosts(user);
 
         if (userPosts.size() == 0) {
@@ -48,7 +48,7 @@ public class StatisticService {
             return new ResponseEntity<>(statisticResponse, HttpStatus.OK);
         }
 
-        StatisticResponse statisticResponse = new StatisticMapperImpl().postsToStatisticResponse(userPosts);
+        StatisticResponse statisticResponse = new StatisticMapper().postsToStatisticResponse(userPosts);
 
         return new ResponseEntity<>(statisticResponse, HttpStatus.OK);
     }
@@ -68,7 +68,7 @@ public class StatisticService {
             if (principal == null) {
                 throw new HttpException("Blog statistics is not public!");
             } else {
-                User user = userRepository.findByEmail(principal.getName());
+                User user = usersRepository.findByEmail(principal.getName());
                 int isModerator = user.getIsModerator();
                 if (isModerator == 0) {
                     throw new HttpException("Blog statistics is not public!");
@@ -88,7 +88,7 @@ public class StatisticService {
             return new ResponseEntity<>(statisticResponse, HttpStatus.OK);
         }
 
-        StatisticResponse statisticResponse = new StatisticMapperImpl().postsToStatisticResponse(allPosts);
+        StatisticResponse statisticResponse = new StatisticMapper().postsToStatisticResponse(allPosts);
 
         return new ResponseEntity<>(statisticResponse, HttpStatus.OK);
     }

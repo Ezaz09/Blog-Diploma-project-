@@ -11,7 +11,7 @@ import java.awt.print.Pageable;
 import java.util.List;
 
 @Repository
-public interface UserRepository extends CrudRepository<User, Integer> {
+public interface UsersRepository extends CrudRepository<User, Integer> {
 
     @Query("From User as u where u.email = :email")
     User findByEmail(@Param("email") String email);

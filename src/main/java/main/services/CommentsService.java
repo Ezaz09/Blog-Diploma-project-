@@ -6,8 +6,8 @@ import main.api.responses.NewCommentResponse;
 import main.model.PostComment;
 import main.model.User;
 import main.model.repositories.CommentsRepository;
-import main.model.repositories.UserRepository;
-import main.services.mappers.CommentMapperImpl;
+import main.model.repositories.UsersRepository;
+import main.api.mappers.CommentMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,19 +21,19 @@ import java.util.HashMap;
 public class CommentsService {
 
     private final CommentsRepository commentsRepository;
-    private final UserRepository userRepository;
+    private final UsersRepository usersRepository;
 
     @Autowired
     public CommentsService(CommentsRepository commentsRepository,
-                           UserRepository userRepository) {
+                           UsersRepository usersRepository) {
         this.commentsRepository = commentsRepository;
-        this.userRepository = userRepository;
+        this.usersRepository = usersRepository;
     }
 
     public ResponseEntity<NewCommentResponse> addNewComment(CommentRequest commentRequest,
                                                             Principal principal) {
-        User user = userRepository.findByEmail(principal.getName());
-        PostComment newPostComment = new CommentMapperImpl().commentRequestToPostComment(commentRequest, user);
+        User user = usersRepository.findByEmail(principal.getName());
+        PostComment newPostComment = new CommentMapper().commentRequestToPostComment(commentRequest, user);
 
         if (newPostComment == null) {
             NewCommentResponse newCommentResponse = new NewCommentResponse();

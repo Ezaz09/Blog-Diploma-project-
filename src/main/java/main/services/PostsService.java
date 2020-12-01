@@ -6,7 +6,6 @@ import main.api.requests.EditPostRequest;
 import main.api.requests.LikeDislikeRequest;
 import main.api.requests.PostRequest;
 import main.api.responses.LikeDislikeResponse;
-import main.api.responses.SettingsResponse;
 import main.api.responses.post_responses.*;
 import main.model.GlobalSetting;
 import main.model.Post;
@@ -15,8 +14,8 @@ import main.model.User;
 import main.model.enums.ModerationStatus;
 import main.model.repositories.PostVotesRepository;
 import main.model.repositories.PostsRepository;
-import main.model.repositories.UserRepository;
-import main.services.mappers.PostsMapperImpl;
+import main.model.repositories.UsersRepository;
+import main.api.mappers.PostsMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -38,7 +37,7 @@ public class PostsService {
 
     private final PostsRepository postsRepository;
 
-    private final UserRepository userRepository;
+    private final UsersRepository usersRepository;
 
     private final PostVotesRepository postVotesRepository;
 
@@ -48,45 +47,37 @@ public class PostsService {
 
     @Autowired
     public PostsService(PostsRepository postsRepository,
-                        UserRepository userRepository,
+                        UsersRepository usersRepository,
                         PostVotesRepository postVotesRepository,
                         TagsService tagsService,
                         GlobalSettingsService globalSettingsService) {
         this.postsRepository = postsRepository;
-        this.userRepository = userRepository;
+        this.usersRepository = usersRepository;
         this.postVotesRepository = postVotesRepository;
         this.tagsService = tagsService;
         this.globalSettingsService = globalSettingsService;
     }
 
-    public ResponseEntity<PostResponse> getPosts(int offset,
-                                                 int limit,
-                                                 String mode) {
-        if (mode.equals("")) {
-            PostResponse postResponse = PostResponse.builder()
-                    .count(0)
-                    .posts(Collections.emptyList()).build();
-            return new ResponseEntity<>(postResponse, HttpStatus.OK);
-        }
-
+    public List<Post> getPosts(int offset,
+                               int limit,
+                               String mode) {
         List<Post> allPosts;
-        if (mode.equals("best")) {
-            allPosts = postsRepository.getPostsSortByLikeVotes(PageRequest.of((offset / limit), limit));
-        } else if (mode.equals("popular")) {
-            allPosts = postsRepository.getPostsSortByComments(PageRequest.of((offset / limit), limit));
-        } else if (mode.equals("early")) {
-            allPosts = postsRepository.getPostsSortByDateAsc(PageRequest.of((offset / limit), limit));
-        } else {
-            allPosts = postsRepository.getPostsSortByDateDesc(PageRequest.of((offset / limit), limit));
+        switch (mode) {
+            case "best":
+                allPosts = postsRepository.getPostsSortByLikeVotes(PageRequest.of((offset / limit), limit));
+                break;
+            case "popular":
+                allPosts = postsRepository.getPostsSortByComments(PageRequest.of((offset / limit), limit));
+                break;
+            case "early":
+                allPosts = postsRepository.getPostsSortByDateAsc(PageRequest.of((offset / limit), limit));
+                break;
+            default:
+                allPosts = postsRepository.getPostsSortByDateDesc(PageRequest.of((offset / limit), limit));
+                break;
         }
 
-        List<PostDTO> listOfPosts = new PostsMapperImpl().postToPostResponse(allPosts);
-        int total = listOfPosts.size();
-
-        PostResponse postResponse = PostResponse.builder()
-                .count(total)
-                .posts(listOfPosts).build();
-        return new ResponseEntity<>(postResponse, HttpStatus.OK);
+        return allPosts;
     }
 
     public ResponseEntity<PostResponse> findPostsByQuery(int offset,
@@ -101,7 +92,7 @@ public class PostsService {
             return new ResponseEntity<>(postResponse, HttpStatus.OK);
         }
 
-        List<PostDTO> listOfPosts = new PostsMapperImpl().postToPostResponse(allPosts);
+        List<PostDTO> listOfPosts = new PostsMapper().postToPostResponse(allPosts);
         int total = listOfPosts.size();
         PostResponse postResponse = PostResponse.builder()
                 .count(total)
@@ -137,7 +128,7 @@ public class PostsService {
             return new ResponseEntity<>(postResponse, HttpStatus.OK);
         }
 
-        List<PostDTO> listOfPosts = new PostsMapperImpl().postToPostResponse(allPosts);
+        List<PostDTO> listOfPosts = new PostsMapper().postToPostResponse(allPosts);
         int total = listOfPosts.size();
         PostResponse postResponse = PostResponse.builder()
                 .count(total)
@@ -165,7 +156,7 @@ public class PostsService {
             return new ResponseEntity<>(postResponse, HttpStatus.OK);
         }
 
-        List<PostDTO> listOfPosts = new PostsMapperImpl().postToPostResponse(allPosts);
+        List<PostDTO> listOfPosts = new PostsMapper().postToPostResponse(allPosts);
         int total = listOfPosts.size();
         PostResponse postResponse = PostResponse.builder()
                 .count(total)
@@ -173,11 +164,11 @@ public class PostsService {
         return new ResponseEntity<>(postResponse, HttpStatus.OK);
     }
 
-    public ResponseEntity<CertainPostResponse> findPostById(int id,
-                                                            Principal principal) {
+    public Post findPostById(int id,
+                             String userEmail) {
         User user = null;
         Post post = null;
-        HashMap<String, Object> userAndPost = getUserAndPost(principal, id);
+        HashMap<String, Object> userAndPost = getUserAndPostAndCheckRelationshipOfUserAndPost(userEmail, id);
 
         if (userAndPost.containsKey("post")) {
             post = (Post) userAndPost.get("post");
@@ -188,29 +179,12 @@ public class PostsService {
         }
 
         if (post == null) {
-            return new ResponseEntity(HttpStatus.NOT_FOUND);
+            return null;
         }
 
-        int viewCount = post.getViewCount();
+        setViewCountForPost(post, user);
 
-        if (user != null) {
-            if (user.getIsModerator() != 1
-                    && user.getId() != post.getUser().getId()) {
-                post.setViewCount(post.getViewCount() + 1);
-            }
-        } else {
-            post.setViewCount(post.getViewCount() + 1);
-        }
-
-        CertainPostResponse certainPostResponse;
-        if (viewCount != post.getViewCount()) {
-            Post savedPost = postsRepository.save(post);
-            certainPostResponse = new PostsMapperImpl().certainPostToPostResponse(savedPost);
-        } else {
-            certainPostResponse = new PostsMapperImpl().certainPostToPostResponse(post);
-        }
-
-        return new ResponseEntity<>(certainPostResponse, HttpStatus.OK);
+        return post;
     }
 
     public ResponseEntity<PostResponse> findUserPosts(int offset,
@@ -218,7 +192,7 @@ public class PostsService {
                                                       String mode,
                                                       Principal principal) {
         Pageable pageable = PageRequest.of(offset, limit);
-        User user = userRepository.findByEmail(principal.getName());
+        User user = usersRepository.findByEmail(principal.getName());
 
         List<Post> allPosts = null;
         switch (mode) {
@@ -243,7 +217,7 @@ public class PostsService {
             return new ResponseEntity<>(postResponse, HttpStatus.OK);
         }
 
-        List<PostDTO> listOfPosts = new PostsMapperImpl().postToPostResponse(allPosts);
+        List<PostDTO> listOfPosts = new PostsMapper().postToPostResponse(allPosts);
         int total = listOfPosts.size();
         PostResponse postResponse = PostResponse.builder()
                 .count(total)
@@ -277,7 +251,7 @@ public class PostsService {
         }
 
         Pageable pageable = PageRequest.of(offset, limit);
-        User moderator = userRepository.findByEmail(principal.getName());
+        User moderator = usersRepository.findByEmail(principal.getName());
         List<Post> moderatorPosts = postsRepository.getModeratorPosts(pageable, moderator, moderationStatus);
         if (moderatorPosts.size() == 0) {
             PostResponse postResponse = PostResponse.builder()
@@ -286,7 +260,7 @@ public class PostsService {
             return new ResponseEntity<>(postResponse, HttpStatus.OK);
         }
 
-        List<PostDTO> listOfPosts = new PostsMapperImpl().postToPostResponse(moderatorPosts);
+        List<PostDTO> listOfPosts = new PostsMapper().postToPostResponse(moderatorPosts);
         int total = listOfPosts.size();
         PostResponse postResponse = PostResponse.builder()
                 .count(total)
@@ -297,8 +271,8 @@ public class PostsService {
     public ResponseEntity<NewPostResponse> addNewPost(PostRequest postRequest,
                                                       Principal principal) {
         PageRequest pageRequest = PageRequest.of(0, 10);
-        User user = userRepository.findByEmail(principal.getName());
-        List<User> moderatorList = userRepository.findModerator(pageRequest);
+        User user = usersRepository.findByEmail(principal.getName());
+        List<User> moderatorList = usersRepository.findModerator(pageRequest);
 
         int max = moderatorList.size() - 1;
         int rand = (int) (Math.random() * ++max);
@@ -316,7 +290,7 @@ public class PostsService {
             }
         }
 
-        Post newPost = new PostsMapperImpl().postRequestToPost(postRequest,
+        Post newPost = new PostsMapper().postRequestToPost(postRequest,
                 user,
                 moderator,
                 needModeration);
@@ -356,7 +330,7 @@ public class PostsService {
                                                      Principal principal) {
         User user = null;
         Post post = null;
-        HashMap<String, Object> userAndPost = getUserAndPost(principal, id);
+        HashMap<String, Object> userAndPost = getUserAndPostAndCheckRelationshipOfUserAndPost(principal.getName(), id);
 
         if (userAndPost.containsKey("post")) {
             post = (Post) userAndPost.get("post");
@@ -396,7 +370,7 @@ public class PostsService {
         assert user != null;
         changeStatus = user.getIsModerator() != 1;
 
-        post = new PostsMapperImpl().editPost(editPostRequest,
+        post = new PostsMapper().editPost(editPostRequest,
                 post,
                 changeStatus);
 
@@ -429,7 +403,7 @@ public class PostsService {
 
     public ResponseEntity<LikeDislikeResponse> addNewLike(LikeDislikeRequest likeDislikeRequest,
                                                           Principal principal) {
-        User user = userRepository.findByEmail(principal.getName());
+        User user = usersRepository.findByEmail(principal.getName());
         Post certainPost = postsRepository.getCertainPost(likeDislikeRequest.getPostId());
 
         if (certainPost == null) {
@@ -465,7 +439,7 @@ public class PostsService {
 
     public ResponseEntity<LikeDislikeResponse> addNewDislike(LikeDislikeRequest likeDislikeRequest,
                                                              Principal principal) {
-        User user = userRepository.findByEmail(principal.getName());
+        User user = usersRepository.findByEmail(principal.getName());
         Post certainPost = postsRepository.getCertainPost(likeDislikeRequest.getPostId());
 
         PostVote postVoteByUserId = postVotesRepository.findPostVoteByUserId(user.getId(), certainPost.getId());
@@ -514,7 +488,7 @@ public class PostsService {
 
     public ResponseEntity<EditPostByModeratorResponse> editPostByModerator(EditPostByModeratorRequest editPostByModeratorRequest,
                                                                            Principal principal) {
-        User moderator = userRepository.findByEmail(principal.getName());
+        User moderator = usersRepository.findByEmail(principal.getName());
         EditPostByModeratorResponse editPostByModeratorResponse = checkUser(moderator);
 
         if (!editPostByModeratorResponse.isResult()) {
@@ -580,19 +554,61 @@ public class PostsService {
     public ResponseEntity<CountOfPostsPerYearResponse> getCountOfPostsPerYear(int year) {
         List<Post> posts = postsRepository.getCountOfPostsPerYear(year);
 
-        CountOfPostsPerYearResponse countOfPostsPerYearResponse = new PostsMapperImpl().postToCountOfPostsPerYear(posts, year);
+        CountOfPostsPerYearResponse countOfPostsPerYearResponse = new PostsMapper().postToCountOfPostsPerYear(posts, year);
 
         return new ResponseEntity<>(countOfPostsPerYearResponse, HttpStatus.OK);
     }
 
-    private HashMap<String, Object> getUserAndPost(Principal principal,
-                                                   int id) {
+    private void setViewCountForPost(Post post,
+                                     User user) {
+        int viewCount = post.getViewCount();
+
+        /**
+          Проверим переданного пользователя
+          если пользователь не является модератором и не являеться автором поста,
+          то увеличим количество просмотров поста
+
+          если пользователь не авторизован (null), то тоже увеличим количество просмотров
+         */
+
+        if (user != null) {
+            if (user.getIsModerator() != 1
+                    && user.getId() != post.getUser().getId()) {
+                post.setViewCount(post.getViewCount() + 1);
+            }
+        } else {
+            post.setViewCount(post.getViewCount() + 1);
+        }
+
+        if (viewCount != post.getViewCount()) {
+            postsRepository.save(post);
+        }
+
+    }
+
+    private HashMap<String, Object> getUserAndPostAndCheckRelationshipOfUserAndPost(String userEmail,
+                                                                                    int id) {
         HashMap<String, Object> results = new HashMap<>();
 
+        /**
+          Получим пользователя для проверки поста
+         */
+
         User user = null;
-        if (principal != null) {
-            user = userRepository.findByEmail(principal.getName());
+        if (userEmail != null) {
+            user = usersRepository.findByEmail(userEmail);
         }
+
+        /**
+          В случае если пользователь был найден и не является модератором
+          проверим, являеться ли полученный пользователь
+          автором поста, для случаев когда автор поста захочет
+          посмотреть/внести изменения в свой пост
+          в момент когда пост еще не одобрен/отклонен модератором
+
+          Если пользователь не был найден - значит запрос поста приходит с главной страницы
+          где посты могут просматривать не авторизованные пользователи
+         */
 
         Post post;
         if (user != null && user.getIsModerator() == 1) {
@@ -609,14 +625,12 @@ public class PostsService {
             post = postsRepository.getCertainPost(id);
         }
 
-        if (post == null) {
-            results.put("error", "Пост не найден!");
-        } else {
-            results.put("post", post);
-            if (user != null) {
-                results.put("user", user);
-            }
+
+        results.put("post", post);
+        if (user != null) {
+            results.put("user", user);
         }
+
 
         return results;
     }

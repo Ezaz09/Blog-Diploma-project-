@@ -1,4 +1,4 @@
-package main.services.mappers;
+package main.api.mappers;
 
 import main.api.responses.TagDTO;
 import main.model.Post;
@@ -12,12 +12,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class TagsMapperImpl {
+public class TagsMapper {
     private final PostsRepository postsRepository;
     private HashMap<String, Double> tableOfWeightsOfTags;
 
     @Autowired
-    public TagsMapperImpl(PostsRepository postsRepository) {
+    public TagsMapper(PostsRepository postsRepository) {
         this.postsRepository = postsRepository;
     }
 

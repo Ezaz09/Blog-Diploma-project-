@@ -8,7 +8,7 @@ import main.model.Tag2Post;
 import main.model.repositories.PostsRepository;
 import main.model.repositories.Tag2PostRepository;
 import main.model.repositories.TagsRepository;
-import main.services.mappers.TagsMapperImpl;
+import main.api.mappers.TagsMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,7 +35,7 @@ public class TagsService {
 
     public ResponseEntity<TagsResponse> getTags() {
         List<Tag> allTags = tagsRepository.findAll();
-        List<TagDTO> listOfTags = new TagsMapperImpl(postsRepository).tagsToTagsResponse(allTags);
+        List<TagDTO> listOfTags = new TagsMapper(postsRepository).tagsToTagsResponse(allTags);
         TagsResponse tagsResponse = TagsResponse.builder()
                 .tags(listOfTags).build();
         return new ResponseEntity<>(tagsResponse, HttpStatus.OK);

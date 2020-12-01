@@ -1,13 +1,14 @@
 package main.controller;
 
+import main.api.mappers.PostsMapper;
 import main.api.requests.EditPostRequest;
 import main.api.requests.LikeDislikeRequest;
 import main.api.requests.PostRequest;
-import main.api.responses.*;
-import main.api.responses.post_responses.CertainPostResponse;
-import main.api.responses.post_responses.EditPostResponse;
-import main.api.responses.post_responses.NewPostResponse;
-import main.api.responses.post_responses.PostResponse;
+import main.api.responses.LikeDislikeResponse;
+import main.api.responses.post_responses.*;
+import main.model.Post;
+import main.model.repositories.PostsRepository;
+import main.model.repositories.UsersRepository;
 import main.services.PostsService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,22 +17,55 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/post")
 public class ApiPostController {
     private final PostsService postsService;
+    private final PostsMapper postsMapper;
+    private final PostsRepository postsRepository;
+    private final UsersRepository usersRepository;
 
-    public ApiPostController(PostsService postsService) {
+    public ApiPostController(PostsService postsService,
+                             PostsMapper postsMapper,
+                             PostsRepository postsRepository,
+                             UsersRepository usersRepository) {
         this.postsService = postsService;
+        this.postsMapper = postsMapper;
+        this.postsRepository = postsRepository;
+        this.usersRepository = usersRepository;
     }
 
     @GetMapping(path = "")
     public ResponseEntity<PostResponse> listOfPosts(@RequestParam(defaultValue = "0", required = false) int offset,
                                                     @RequestParam(defaultValue = "20", required = false) int limit,
                                                     @RequestParam(defaultValue = "recent", required = false) String mode) {
-        return postsService.getPosts(offset, limit, mode);
+        boolean isModePassed = checkGetPostsRequest(mode);
+
+        if(!isModePassed) {
+            PostResponse postResponse = PostResponse.builder()
+                    .count(0)
+                    .posts(Collections.emptyList()).build();
+            return new ResponseEntity<>(postResponse, HttpStatus.OK);
+        }
+
+        List<Post> posts = postsService.getPosts(offset, limit, mode);
+
+        List<PostDTO> listOfPosts = postsMapper.postToPostResponse(posts);
+        int total = listOfPosts.size();
+
+        PostResponse postResponse = PostResponse.builder()
+                .count(total)
+                .posts(listOfPosts).build();
+        return new ResponseEntity<>(postResponse, HttpStatus.OK);
+    }
+
+    private boolean checkGetPostsRequest(String mode) {
+        return mode.equals("best")
+                || mode.equals("popular")
+                || mode.equals("early")
+                || mode.equals("recent");
     }
 
     @PostMapping(path = "")
@@ -65,7 +99,23 @@ public class ApiPostController {
     @GetMapping(path = "/{id}")
     public ResponseEntity<CertainPostResponse> getPost(@PathVariable int id,
                                                        Principal principal) {
-        return postsService.findPostById(id, principal);
+        String userEmail;
+        if(principal != null) {
+            userEmail = principal.getName();
+        } else {
+            userEmail = null;
+        }
+
+        Post postById = postsService.findPostById(id, userEmail);
+
+        if (postById == null) {
+            return new ResponseEntity(HttpStatus.NOT_FOUND);
+        }
+
+        CertainPostResponse certainPostResponse;
+        certainPostResponse = postsMapper.certainPostToPostResponse(postById);
+
+        return new ResponseEntity<>(certainPostResponse, HttpStatus.OK);
     }
 
     @PutMapping(path = "/{id}")

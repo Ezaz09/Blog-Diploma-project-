@@ -9,7 +9,7 @@ import main.api.responses.user_response.ProfileResponse;
 import main.model.CaptchaCode;
 import main.model.User;
 import main.model.repositories.CaptchaCodesRepository;
-import main.model.repositories.UserRepository;
+import main.model.repositories.UsersRepository;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
-import javax.xml.bind.DatatypeConverter;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
@@ -31,17 +30,17 @@ import java.util.*;
 @Slf4j
 @Service
 public class ProfileService {
-    private final UserRepository userRepository;
+    private final UsersRepository usersRepository;
     private final CaptchaCodesRepository captchaCodesRepository;
     private final EmailService emailService;
     private final ImageService imageService;
 
     @Autowired
-    public ProfileService(UserRepository userRepository,
+    public ProfileService(UsersRepository usersRepository,
                           CaptchaCodesRepository captchaCodesRepository,
                           EmailService emailService,
                           ImageService imageService) {
-        this.userRepository = userRepository;
+        this.usersRepository = usersRepository;
         this.captchaCodesRepository = captchaCodesRepository;
         this.emailService = emailService;
         this.imageService = imageService;
@@ -134,7 +133,7 @@ public class ProfileService {
 
     public ResponseEntity<RestorePasswordResponse> restorePassword(RestorePasswordRequest restorePasswordRequest,
                                                                    String appUrl) {
-        User userByEmail = userRepository.findByEmail(restorePasswordRequest.getEmail());
+        User userByEmail = usersRepository.findByEmail(restorePasswordRequest.getEmail());
 
         if (userByEmail == null) {
             RestorePasswordResponse restorePasswordResponse = new RestorePasswordResponse();
@@ -145,7 +144,7 @@ public class ProfileService {
         String resetCode = UUID.randomUUID().toString();
         userByEmail.setCode(resetCode);
 
-        userRepository.save(userByEmail);
+        usersRepository.save(userByEmail);
 
         SimpleMailMessage passwordResetEmail = new SimpleMailMessage();
         passwordResetEmail.setTo(restorePasswordRequest.getEmail());
@@ -168,7 +167,7 @@ public class ProfileService {
         }
 
         String resetCode = changePasswordRequest.getCode();
-        User userByResetCode = userRepository.findByResetCode(resetCode);
+        User userByResetCode = usersRepository.findByResetCode(resetCode);
 
         if (userByResetCode == null) {
             profileResponse.setResult(false);
@@ -184,7 +183,7 @@ public class ProfileService {
         String encode = bCryptPasswordEncoder.encode(changePasswordRequest.getPassword());
         userByResetCode.setPassword(encode);
 
-        userRepository.save(userByResetCode);
+        usersRepository.save(userByResetCode);
 
         profileResponse.setResult(true);
         return new ResponseEntity<>(profileResponse, HttpStatus.OK);
@@ -203,7 +202,7 @@ public class ProfileService {
         if (profileRequest != null) {
             String emailFromRequest = profileRequest.getEmail();
             if (!userEmail.equals(emailFromRequest)) {
-                User byEmail = userRepository.findByEmail(emailFromRequest);
+                User byEmail = usersRepository.findByEmail(emailFromRequest);
                 if (byEmail != null) {
                     profileResponse.setResult(false);
                     errors.put("email", "Этот e-mail уже зарегистрирован.");
@@ -238,7 +237,7 @@ public class ProfileService {
         } else if (profileRequestWithoutPhoto != null) {
             String emailFromRequest = profileRequestWithoutPhoto.getEmail();
             if (!userEmail.equals(emailFromRequest)) {
-                User byEmail = userRepository.findByEmail(emailFromRequest);
+                User byEmail = usersRepository.findByEmail(emailFromRequest);
                 if (byEmail != null) {
                     profileResponse.setResult(false);
                     errors.put("email", "Этот e-mail уже зарегистрирован.");
@@ -263,7 +262,7 @@ public class ProfileService {
             return profileResponse;
         } else if (newProfileRequest != null) {
             String emailFromRequest = newProfileRequest.getEmail();
-            User byEmail = userRepository.findByEmail(emailFromRequest);
+            User byEmail = usersRepository.findByEmail(emailFromRequest);
             if (byEmail != null) {
                 profileResponse.setResult(false);
                 errors.put("email", "Этот e-mail уже зарегистрирован.");
@@ -334,7 +333,7 @@ public class ProfileService {
         HashMap<String, String> errors = new HashMap<>();
         profileResponse.setErrors(errors);
 
-        User user = userRepository.findByEmail(userEmail);
+        User user = usersRepository.findByEmail(userEmail);
         user.setName(editProfileRequestWithPhoto.getName());
         user.setEmail(editProfileRequestWithPhoto.getEmail());
 
@@ -355,7 +354,7 @@ public class ProfileService {
             user.setPhoto(pathToPhoto);
         }
 
-        userRepository.save(user);
+        usersRepository.save(user);
 
         profileResponse.setResult(true);
         return profileResponse;
@@ -368,7 +367,7 @@ public class ProfileService {
         HashMap<String, String> errors = new HashMap<>();
         profileResponse.setErrors(errors);
 
-        User user = userRepository.findByEmail(userEmail);
+        User user = usersRepository.findByEmail(userEmail);
         user.setName(editProfileRequestWithoutPhoto.getName());
         user.setEmail(editProfileRequestWithoutPhoto.getEmail());
 
@@ -389,7 +388,7 @@ public class ProfileService {
         }
 
 
-        userRepository.save(user);
+        usersRepository.save(user);
 
         profileResponse.setResult(true);
         return profileResponse;
@@ -419,7 +418,7 @@ public class ProfileService {
         newUser.setName(profileRequest.getName());
         newUser.setRegTime(LocalDate.now());
 
-        userRepository.save(newUser);
+        usersRepository.save(newUser);
 
         ProfileResponse profileResponse = new ProfileResponse();
         profileResponse.setResult(true);

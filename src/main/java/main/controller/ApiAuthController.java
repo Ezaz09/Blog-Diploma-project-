@@ -10,7 +10,7 @@ import main.api.responses.LogoutResponse;
 import main.api.responses.RestorePasswordResponse;
 import main.api.responses.user_response.ProfileResponse;
 import main.api.responses.user_response.UserLoginResponse;
-import main.model.repositories.UserRepository;
+import main.model.repositories.UsersRepository;
 import main.services.ProfileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -33,17 +33,17 @@ import java.security.Principal;
 @RequestMapping("/api/auth")
 public class ApiAuthController {
     private final AuthenticationManager authenticationManager;
-    private final UserRepository userRepository;
+    private final UsersRepository usersRepository;
     private final ProfileService profileService;
 
 
 
     @Autowired
     public ApiAuthController(AuthenticationManager authenticationManager,
-                             UserRepository userRepository,
+                             UsersRepository usersRepository,
                              ProfileService profileService) {
         this.authenticationManager = authenticationManager;
-        this.userRepository = userRepository;
+        this.usersRepository = usersRepository;
         this.profileService = profileService;
     }
 
@@ -105,7 +105,7 @@ public class ApiAuthController {
     }
 
     private LoginResponse getLoginResponse(String email) {
-        main.model.User currentUser = userRepository.findByEmail(email);
+        main.model.User currentUser = usersRepository.findByEmail(email);
 
         if (currentUser == null) {
             throw new UsernameNotFoundException(email);
