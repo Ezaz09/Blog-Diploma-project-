@@ -1,12 +1,11 @@
 package main.services;
 
-import lombok.extern.slf4j.Slf4j;
+import main.api.mappers.PostsMapper;
 import main.api.requests.EditPostByModeratorRequest;
 import main.api.requests.EditPostRequest;
 import main.api.requests.LikeDislikeRequest;
 import main.api.requests.PostRequest;
-import main.api.responses.LikeDislikeResponse;
-import main.api.responses.post_responses.*;
+import main.api.responses.UserAndPostResponse;
 import main.model.GlobalSetting;
 import main.model.Post;
 import main.model.PostVote;
@@ -15,23 +14,19 @@ import main.model.enums.ModerationStatus;
 import main.model.repositories.PostVotesRepository;
 import main.model.repositories.PostsRepository;
 import main.model.repositories.UsersRepository;
-import main.api.mappers.PostsMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.security.Principal;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 
-@Slf4j
 @Service
 public class PostsService {
 
@@ -61,7 +56,15 @@ public class PostsService {
     public List<Post> getPosts(int offset,
                                int limit,
                                String mode) {
-        List<Post> allPosts;
+        /**
+         * Функция возвращает список всех постов, которые сохранены в блоге
+         * Параметры функции
+         * offset - количество постов в начале списка, которое не попадет в результат запроса
+         * limit - ограничение на количество постов в результате запроса
+         * mode - режим сортировки результата запроса. Если будет указан не существующий режим - функция вернет пустой ArrayList.
+         */
+
+        List<Post> allPosts = new ArrayList<>();
         switch (mode) {
             case "best":
                 allPosts = postsRepository.getPostsSortByLikeVotes(PageRequest.of((offset / limit), limit));
@@ -72,47 +75,39 @@ public class PostsService {
             case "early":
                 allPosts = postsRepository.getPostsSortByDateAsc(PageRequest.of((offset / limit), limit));
                 break;
-            default:
+            case "recent":
                 allPosts = postsRepository.getPostsSortByDateDesc(PageRequest.of((offset / limit), limit));
-                break;
         }
 
         return allPosts;
     }
 
-    public ResponseEntity<PostResponse> findPostsByQuery(int offset,
-                                                         int limit,
-                                                         String query) {
-        Pageable pageable = PageRequest.of(offset, limit);
-        List<Post> allPosts = postsRepository.getPostsByQuery(pageable, query);
-        if (allPosts.size() == 0) {
-            PostResponse postResponse = PostResponse.builder()
-                    .count(0)
-                    .posts(Collections.emptyList()).build();
-            return new ResponseEntity<>(postResponse, HttpStatus.OK);
-        }
+    public List<Post> findPostsByQuery(int offset,
+                                       int limit,
+                                       String query) {
+        /**
+         * Функция возвращает список постов, заголовок которых
+         * содержит/равно значению параметра "query"
+         * Параметры функции
+         * offset - количество постов в начале списка, которое не попадет в результат запроса
+         * limit - ограничение на количество постов в результате запроса
+         * query - параметр для поиска постов
+         */
 
-        List<PostDTO> listOfPosts = new PostsMapper().postToPostResponse(allPosts);
-        int total = listOfPosts.size();
-        PostResponse postResponse = PostResponse.builder()
-                .count(total)
-                .posts(listOfPosts).build();
-        return new ResponseEntity<>(postResponse, HttpStatus.OK);
+        Pageable pageable = PageRequest.of(offset, limit);
+        return postsRepository.getPostsByQuery(pageable, query);
     }
 
-    public ResponseEntity<PostResponse> findPostsByDate(int offset,
-                                                        int limit,
-                                                        String date) {
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
-        Date startOfDay;
-        try {
-            startOfDay = simpleDateFormat.parse(date);
-        } catch (ParseException ex) {
-            PostResponse postResponse = PostResponse.builder()
-                    .count(0)
-                    .posts(Collections.emptyList()).build();
-            return new ResponseEntity<>(postResponse, HttpStatus.OK);
-        }
+    public List<Post> findPostsByDate(int offset,
+                                      int limit,
+                                      Date startOfDay) {
+        /**
+         * Функция находит посты, которые были созданы в пределах переданной в параметрах даты
+         * Параметры функции
+         * offset - количество постов в начале списка, которое не попадет в результат запроса
+         * limit - ограничение на количество постов в результате запроса
+         * startOfDay - дата, на которую требуется получить посты
+         */
 
         Pageable pageable = PageRequest.of(offset, limit);
 
@@ -121,62 +116,43 @@ public class PostsService {
         Date endOfDay = localDateTimeToDate(endOfDayLocalDate);
 
         List<Post> allPosts = postsRepository.getPostsByDate(pageable, startOfDay, endOfDay);
-        if (allPosts.size() == 0) {
-            PostResponse postResponse = PostResponse.builder()
-                    .count(0)
-                    .posts(Collections.emptyList()).build();
-            return new ResponseEntity<>(postResponse, HttpStatus.OK);
-        }
-
-        List<PostDTO> listOfPosts = new PostsMapper().postToPostResponse(allPosts);
-        int total = listOfPosts.size();
-        PostResponse postResponse = PostResponse.builder()
-                .count(total)
-                .posts(listOfPosts).build();
-        return new ResponseEntity<>(postResponse, HttpStatus.OK);
+        return allPosts;
     }
 
-    private static LocalDateTime dateToLocalDateTime(Date date) {
-        return LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
-    }
+    public List<Post> findPostsByTag(int offset,
+                                     int limit,
+                                     String tag) {
+        /**
+         * Функция производит поиск постов в базе данных,
+         * которые имеют тэг, который был передан в параметре tag
+         * Параметры функции
+         * offset - количество постов в начале списка, которое не попадет в результат запроса
+         * limit - ограничение на количество постов в результате запроса
+         * tag - тэг, по которому производится поиск постов
+         */
 
-    private static Date localDateTimeToDate(LocalDateTime localDateTime) {
-        return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
-    }
-
-    public ResponseEntity<PostResponse> findPostsByTag(int offset,
-                                                       int limit,
-                                                       String tag) {
         Pageable pageable = PageRequest.of(offset, limit);
-        List<Post> allPosts = postsRepository.getPostsByTag(pageable, tag);
-        if (allPosts.size() == 0) {
-            PostResponse postResponse = PostResponse.builder()
-                    .count(0)
-                    .posts(Collections.emptyList()).build();
-            return new ResponseEntity<>(postResponse, HttpStatus.OK);
-        }
-
-        List<PostDTO> listOfPosts = new PostsMapper().postToPostResponse(allPosts);
-        int total = listOfPosts.size();
-        PostResponse postResponse = PostResponse.builder()
-                .count(total)
-                .posts(listOfPosts).build();
-        return new ResponseEntity<>(postResponse, HttpStatus.OK);
+        return postsRepository.getPostsByTag(pageable, tag);
     }
 
     public Post findPostById(int id,
                              String userEmail) {
-        User user = null;
-        Post post = null;
-        HashMap<String, Object> userAndPost = getUserAndPostAndCheckRelationshipOfUserAndPost(userEmail, id);
+        /**
+         * Функция получает из БД пост по переданному id
+         * А так же пользователя, если он авторизован
+         * Увеличивает значение количества просмотров поста (если все условия были пройдены)
+         * И возвращает полученный пост
+         * Параметры функции
+         * id - id нужного поста
+         * userEmail - email пользователя
+         */
 
-        if (userAndPost.containsKey("post")) {
-            post = (Post) userAndPost.get("post");
-        }
+        User user;
+        Post post;
+        UserAndPostResponse userAndPost = getUserAndPostAndCheckRelationshipOfUserAndPost(userEmail, id);
 
-        if (userAndPost.containsKey("user")) {
-            user = (User) userAndPost.get("user");
-        }
+        post = userAndPost.getPost();
+        user = userAndPost.getUser();
 
         if (post == null) {
             return null;
@@ -187,14 +163,24 @@ public class PostsService {
         return post;
     }
 
-    public ResponseEntity<PostResponse> findUserPosts(int offset,
-                                                      int limit,
-                                                      String mode,
-                                                      Principal principal) {
-        Pageable pageable = PageRequest.of(offset, limit);
-        User user = usersRepository.findByEmail(principal.getName());
+    public List<Post> findUserPosts(int offset,
+                                    int limit,
+                                    String mode,
+                                    String userEmail) {
+        /**
+         * Функция находит посты авторизованного пользователя
+         * определенного типа, который был передан в параметре mode
+         * Параметры функции
+         * offset - количество постов в начале списка, которое не попадет в результат запроса
+         * limit - ограничение на количество постов в результате запроса
+         * mode - тип постов пользователя
+         * userEmail - email пользователя
+         */
 
-        List<Post> allPosts = null;
+        Pageable pageable = PageRequest.of(offset, limit);
+        User user = usersRepository.findByEmail(userEmail);
+
+        List<Post> allPosts = new ArrayList<>();
         switch (mode) {
             case "inactive":
                 allPosts = postsRepository.getInactiveUserPosts(pageable, user);
@@ -210,26 +196,24 @@ public class PostsService {
                 break;
         }
 
-        if (allPosts.size() == 0) {
-            PostResponse postResponse = PostResponse.builder()
-                    .count(0)
-                    .posts(Collections.emptyList()).build();
-            return new ResponseEntity<>(postResponse, HttpStatus.OK);
-        }
-
-        List<PostDTO> listOfPosts = new PostsMapper().postToPostResponse(allPosts);
-        int total = listOfPosts.size();
-        PostResponse postResponse = PostResponse.builder()
-                .count(total)
-                .posts(listOfPosts).build();
-        return new ResponseEntity<>(postResponse, HttpStatus.OK);
+        return allPosts;
     }
 
-    public ResponseEntity<PostResponse> findModeratorPosts(int offset,
-                                                           int limit,
-                                                           String status,
-                                                           Principal principal) {
+    public List<Post> findModeratorPosts(int offset,
+                                         int limit,
+                                         String status,
+                                         String moderatorEmail) {
+        /**
+         * Функция находит посты авторизованного модератора
+         * определенного статуса, который был передан в параметре status
+         * Параметры функции
+         * offset - количество постов в начале списка, которое не попадет в результат запроса
+         * limit - ограничение на количество постов в результате запроса
+         * status - статус постов пользователей
+         * moderatorEmail - email модератора
+         */
 
+        List<Post> moderatorPosts = new ArrayList<>();
         ModerationStatus moderationStatus = null;
         switch (status) {
             case "new":
@@ -244,51 +228,31 @@ public class PostsService {
         }
 
         if (moderationStatus == null) {
-            PostResponse postResponse = PostResponse.builder()
-                    .count(0)
-                    .posts(Collections.emptyList()).build();
-            return new ResponseEntity<>(postResponse, HttpStatus.OK);
+            return moderatorPosts;
         }
 
         Pageable pageable = PageRequest.of(offset, limit);
-        User moderator = usersRepository.findByEmail(principal.getName());
-        List<Post> moderatorPosts = postsRepository.getModeratorPosts(pageable, moderator, moderationStatus);
-        if (moderatorPosts.size() == 0) {
-            PostResponse postResponse = PostResponse.builder()
-                    .count(0)
-                    .posts(Collections.emptyList()).build();
-            return new ResponseEntity<>(postResponse, HttpStatus.OK);
-        }
+        User moderator = usersRepository.findByEmail(moderatorEmail);
+        moderatorPosts = postsRepository.getModeratorPosts(pageable, moderator, moderationStatus);
 
-        List<PostDTO> listOfPosts = new PostsMapper().postToPostResponse(moderatorPosts);
-        int total = listOfPosts.size();
-        PostResponse postResponse = PostResponse.builder()
-                .count(total)
-                .posts(listOfPosts).build();
-        return new ResponseEntity<>(postResponse, HttpStatus.OK);
+        return moderatorPosts;
     }
 
-    public ResponseEntity<NewPostResponse> addNewPost(PostRequest postRequest,
-                                                      Principal principal) {
-        PageRequest pageRequest = PageRequest.of(0, 10);
-        User user = usersRepository.findByEmail(principal.getName());
-        List<User> moderatorList = usersRepository.findModerator(pageRequest);
+    public boolean addNewPost(PostRequest postRequest,
+                              String userEmail) {
+        /**
+         * Функция создает новый пост на основе данных, переданных в postRequest
+         * в случае если пост был создан и сохранен, функция возвращает true
+         * если произошла ошибка в процессе мэппинга postRequest, функция возвращает false
+         * Параметры функции
+         * postRequest - пост из реквеста для добавления в базу данных
+         * userEmail - email пользователя
+         */
 
-        int max = moderatorList.size() - 1;
-        int rand = (int) (Math.random() * ++max);
-        User moderator = moderatorList.get(rand);
+        User user = usersRepository.findByEmail(userEmail);
+        User moderator = getRandomModeratorForPostModeration();
 
-        GlobalSetting postPremoderation = globalSettingsService.getGlobalSettingForAPIByName("POST_PREMODERATION");
-        boolean needModeration = true;
-
-        if(postPremoderation != null)
-        {
-            if(postPremoderation.getValue().equals("false")) {
-                needModeration = false;
-            } else {
-                needModeration = true;
-            }
-        }
+        boolean needModeration = isPremoderationForPostsNeeded();
 
         Post newPost = new PostsMapper().postRequestToPost(postRequest,
                 user,
@@ -296,73 +260,43 @@ public class PostsService {
                 needModeration);
 
         if (newPost == null) {
-            NewPostResponse newPostResponse = new NewPostResponse();
-            newPostResponse.setResult(false);
-
-            return new ResponseEntity<>(newPostResponse, HttpStatus.OK);
-        }
-
-        String editPostRequestTitle = postRequest.getTitle();
-        String editPostRequestText = postRequest.getText();
-
-        NewPostResponse newPostResponse = new NewPostResponse();
-
-        HashMap<String, String> errors = checkParamsOfPost(editPostRequestText, editPostRequestTitle);
-
-        if (!errors.isEmpty()) {
-            newPostResponse.setResult(false);
-            newPostResponse.setErrors(errors);
-            return new ResponseEntity<>(newPostResponse, HttpStatus.OK);
+            return false;
         }
 
         postsRepository.save(newPost);
         tagsService.setTagsForNewPost(postRequest.getTags(),
                 newPost.getId());
 
-
-        newPostResponse.setResult(true);
-
-        return new ResponseEntity<>(newPostResponse, HttpStatus.OK);
+        return true;
     }
 
-    public ResponseEntity<EditPostResponse> editPost(int id,
-                                                     EditPostRequest editPostRequest,
-                                                     Principal principal) {
-        User user = null;
-        Post post = null;
-        HashMap<String, Object> userAndPost = getUserAndPostAndCheckRelationshipOfUserAndPost(principal.getName(), id);
+    public HashMap<String, String> editPost(int id,
+                                            EditPostRequest editPostRequest,
+                                            String userEmail) {
+        /**
+         * Функция находит по переданному id пост в базе данных
+         * и в случае если пост был найден,
+         * изменяет параметры поста на те что были переданны в параметре editPostRequest
+         * Возвращает HashMap, который содержит в себе список ошибок, если такие возникли
+         * в процессе выполнения кода.
+         * Параметры функции
+         * editPostRequest - пост из реквеста для изменения
+         * userEmail - email пользователя
+         */
 
-        if (userAndPost.containsKey("post")) {
-            post = (Post) userAndPost.get("post");
-        }
+        HashMap<String, String> mapOfErrors = new HashMap<>();
 
-        if (userAndPost.containsKey("user")) {
-            user = (User) userAndPost.get("user");
-        }
+        User user;
+        Post post;
+        UserAndPostResponse userAndPost = getUserAndPostAndCheckRelationshipOfUserAndPost(userEmail, id);
+
+        post = userAndPost.getPost();
+        user = userAndPost.getUser();
 
         if (post == null) {
-            EditPostResponse editPostResponse = new EditPostResponse();
-            editPostResponse.setResult(false);
+            mapOfErrors.put("text", "Запрашиваемый пост не был найден!");
 
-
-            HashMap<String, String> error = new HashMap<>();
-            error.put("text", "Запрашиваемый пост не был найден!");
-
-            editPostResponse.setErrors(error);
-
-            return new ResponseEntity<>(editPostResponse, HttpStatus.OK);
-        }
-
-        String editPostRequestTitle = editPostRequest.getTitle();
-        String editPostRequestText = editPostRequest.getText();
-
-        EditPostResponse editPostResponse = new EditPostResponse();
-        HashMap<String, String> errors = checkParamsOfPost(editPostRequestText, editPostRequestTitle);
-
-        if (!errors.isEmpty()) {
-            editPostResponse.setResult(false);
-            editPostResponse.setErrors(errors);
-            return new ResponseEntity<>(editPostResponse, HttpStatus.OK);
+            return mapOfErrors;
         }
 
         boolean changeStatus;
@@ -370,7 +304,7 @@ public class PostsService {
         assert user != null;
         changeStatus = user.getIsModerator() != 1;
 
-        post = new PostsMapper().editPost(editPostRequest,
+        post = editParamsOfPost(editPostRequest,
                 post,
                 changeStatus);
 
@@ -379,94 +313,112 @@ public class PostsService {
                 post.getTags2Post(),
                 post.getId());
 
-        editPostResponse.setResult(true);
-
-        return new ResponseEntity<>(editPostResponse, HttpStatus.OK);
+        return mapOfErrors;
     }
 
-    private HashMap<String, String> checkParamsOfPost(String editPostRequestText,
-                                                      String editPostRequestTitle) {
-        HashMap<String, String> errors = new HashMap<>();
-        if (editPostRequestTitle.length() < 3 ||
-                editPostRequestText.length() < 50) {
 
-            if (editPostRequestTitle.length() < 3) {
-                errors.put("title", "Заголовок слишком короткий");
-            }
+    public HashMap<String, String>  editPostByModerator(EditPostByModeratorRequest editPostByModeratorRequest,
+                                      User moderator) {
+        /**
+         * Функция получает запрос на изменение решения по посту и пользователя
+         * проверяет, является ли переданный пользователь модератором
+         * и меняет статус модерации у поста
+         * Параметры функции
+         * editPostByModeratorRequest - запрос на изменение решения по посту
+         * moderator - модератор
+         */
+        HashMap<String, String> mapOfErrors = new HashMap<>();
 
-            if (editPostRequestText.length() < 50) {
-                errors.put("text", "Текст публикации слишком короткий");
-            }
+        if(moderator.getIsModerator() == 0) {
+            mapOfErrors.put("auth", "Пользователь не являеться модератором!");
+            return mapOfErrors;
         }
-        return errors;
+
+        Post post = postsRepository.getCertainPostForModerators(editPostByModeratorRequest.getPostId());
+
+        if (post == null) {
+            mapOfErrors.put("post", "Запрошенный пост не был найден!");
+            return mapOfErrors;
+        }
+
+        if (editPostByModeratorRequest.getDecision().equals("accept")) {
+            post.setModerationStatus(ModerationStatus.ACCEPTED);
+        } else if (editPostByModeratorRequest.getDecision().equals("decline")) {
+            post.setModerationStatus(ModerationStatus.DECLINED);
+        } else {
+            mapOfErrors.put("decision", "Переданное решение по посту не распознано!");
+            return mapOfErrors;
+        }
+
+        post.setModerator(moderator);
+        postsRepository.save(post);
+
+        return mapOfErrors;
     }
 
-    public ResponseEntity<LikeDislikeResponse> addNewLike(LikeDislikeRequest likeDislikeRequest,
-                                                          Principal principal) {
-        User user = usersRepository.findByEmail(principal.getName());
+    public List<Post> getCountOfPostsPerYear(int year) {
+        return postsRepository.getCountOfPostsPerYear(year);
+    }
+
+    public boolean addNewLikeDislike(LikeDislikeRequest likeDislikeRequest,
+                              String userEmail,
+                              boolean likeDislike) {
+        /**
+         * Функция создает новый лайк/дизлайк, взависимости от параметра likeDislike
+         * для поста, переданного в параметре likeDislikeRequest, или заменяет существующий
+         * лайк на дизлайк в базе данных и наоборот
+         * Параметры функции
+         * likeDislikeRequest - пост для которого нужно проставить лайк/дизлайк
+         * userEmail - email пользователя
+         * likeDislike - лайк(true) или дизлайк(false)
+         */
+
+        User user = usersRepository.findByEmail(userEmail);
+
+        if(user == null) {
+            return false;
+        }
+
         Post certainPost = postsRepository.getCertainPost(likeDislikeRequest.getPostId());
 
         if (certainPost == null) {
-            LikeDislikeResponse likeDislikeResponse = new LikeDislikeResponse();
-            likeDislikeResponse.setResult(false);
-            return new ResponseEntity<>(likeDislikeResponse, HttpStatus.OK);
+            return false;
         }
+
+        /**
+         * произведем поиск лайка/дизлайка для переданного поста пользователем
+         * если поиск не дал результатов - создаем новый лайк/дизлайк
+         * но если, к примеру, был найден лайк, а пользователь теперь ставит дизлайк, то меняем лайк на дизлайк и так же для обратного случая
+         * если был найден лайк и пользователь ставит лайк, то ничего не делаем
+         */
 
         PostVote postVoteByUserId = postVotesRepository.findPostVoteByUserId(user.getId(), certainPost.getId());
 
-        PostVote postVote;
         if (postVoteByUserId == null) {
-            postVote = setNewLikeDislike(true,
-                    certainPost.getId(),
-                    user.getId());
+            PostVote postVote = setNewLikeDislike(likeDislike,
+                                                  certainPost.getId(),
+                                                  user.getId());
             postVotesRepository.save(postVote);
-        } else {
-            if (postVoteByUserId.getValue() == 1) {
-                LikeDislikeResponse likeDislikeResponse = new LikeDislikeResponse();
-                likeDislikeResponse.setResult(false);
-
-                return new ResponseEntity<>(likeDislikeResponse, HttpStatus.OK);
+        } else if (postVoteByUserId.getValue() == 1) {
+            if(!likeDislike) {
+                changeParamOfPostVote(postVoteByUserId, -1);
+                return true;
             }
-            postVoteByUserId.setValue(1);
-            postVotesRepository.save(postVoteByUserId);
+           return false;
+        } else if (postVoteByUserId.getValue() == -1){
+            if(likeDislike) {
+                changeParamOfPostVote(postVoteByUserId, 1);
+                return true;
+            }
+            return false;
         }
-
-        LikeDislikeResponse likeDislikeResponse = new LikeDislikeResponse();
-        likeDislikeResponse.setResult(true);
-
-        return new ResponseEntity<>(likeDislikeResponse, HttpStatus.OK);
+        return true;
     }
 
-    public ResponseEntity<LikeDislikeResponse> addNewDislike(LikeDislikeRequest likeDislikeRequest,
-                                                             Principal principal) {
-        User user = usersRepository.findByEmail(principal.getName());
-        Post certainPost = postsRepository.getCertainPost(likeDislikeRequest.getPostId());
-
-        PostVote postVoteByUserId = postVotesRepository.findPostVoteByUserId(user.getId(), certainPost.getId());
-
-        PostVote postVote;
-        if (postVoteByUserId == null) {
-            postVote = setNewLikeDislike(false,
-                    certainPost.getId(),
-                    user.getId());
-            postVotesRepository.save(postVote);
-        } else {
-            if (postVoteByUserId.getValue() == -1) {
-                LikeDislikeResponse likeDislikeResponse = new LikeDislikeResponse();
-                likeDislikeResponse.setResult(false);
-
-                return new ResponseEntity<>(likeDislikeResponse, HttpStatus.OK);
-            }
-            postVoteByUserId.setValue(-1);
-            postVotesRepository.save(postVoteByUserId);
-        }
-
-        LikeDislikeResponse likeDislikeResponse = new LikeDislikeResponse();
-        likeDislikeResponse.setResult(true);
-
-        return new ResponseEntity<>(likeDislikeResponse, HttpStatus.OK);
+    private void changeParamOfPostVote(PostVote postVoteByUserId, int value) {
+        postVoteByUserId.setValue(value);
+        postVotesRepository.save(postVoteByUserId);
     }
-
 
     private PostVote setNewLikeDislike(boolean isLike,
                                          int postId,
@@ -479,90 +431,14 @@ public class PostsService {
         if (isLike) {
             postVote.setValue(1);
         } else {
-            postVote.setValue(0);
+            postVote.setValue(-1);
         }
 
         return postVote;
     }
 
-
-    public ResponseEntity<EditPostByModeratorResponse> editPostByModerator(EditPostByModeratorRequest editPostByModeratorRequest,
-                                                                           Principal principal) {
-        User moderator = usersRepository.findByEmail(principal.getName());
-        EditPostByModeratorResponse editPostByModeratorResponse = checkUser(moderator);
-
-        if (!editPostByModeratorResponse.isResult()) {
-            return new ResponseEntity<>(editPostByModeratorResponse, HttpStatus.OK);
-        }
-
-        Post post = postsRepository.getCertainPostForModerators(editPostByModeratorRequest.getPostId());
-
-        if (post == null) {
-            editPostByModeratorResponse = new EditPostByModeratorResponse();
-            editPostByModeratorResponse.setResult(true);
-            HashMap<String, String> error = new HashMap<>();
-            editPostByModeratorResponse.setErrors(error);
-
-            editPostByModeratorResponse.setResult(false);
-            error.put("text", "Запрашиваемый пост не найден!");
-
-            return new ResponseEntity<>(editPostByModeratorResponse, HttpStatus.OK);
-        }
-
-        if (editPostByModeratorRequest.getDecision().equals("accept")) {
-            post.setModerationStatus(ModerationStatus.ACCEPTED);
-        } else if (editPostByModeratorRequest.getDecision().equals("decline")) {
-            post.setModerationStatus(ModerationStatus.DECLINED);
-        } else {
-            editPostByModeratorResponse = new EditPostByModeratorResponse();
-            editPostByModeratorResponse.setResult(true);
-            HashMap<String, String> error = new HashMap<>();
-            editPostByModeratorResponse.setErrors(error);
-
-            editPostByModeratorResponse.setResult(false);
-            error.put("text", "Выбранный статус для поста не распознан!");
-
-            return new ResponseEntity<>(editPostByModeratorResponse, HttpStatus.OK);
-        }
-
-        post.setModerator(moderator);
-        postsRepository.save(post);
-
-        editPostByModeratorResponse = new EditPostByModeratorResponse();
-        editPostByModeratorResponse.setResult(true);
-
-        return new ResponseEntity<>(editPostByModeratorResponse, HttpStatus.OK);
-    }
-
-    private EditPostByModeratorResponse checkUser(User user) {
-        EditPostByModeratorResponse editPostByModeratorResponse = new EditPostByModeratorResponse();
-        editPostByModeratorResponse.setResult(true);
-        HashMap<String, String> error = new HashMap<>();
-        editPostByModeratorResponse.setErrors(error);
-
-        if (user == null) {
-            editPostByModeratorResponse.setResult(false);
-            error.put("text", "Пользователь не авторизован!");
-        } else if (user.getIsModerator() == 0) {
-            editPostByModeratorResponse.setResult(false);
-            error.put("text", "Пользователь не является модератором!");
-        }
-
-        return editPostByModeratorResponse;
-    }
-
-    public ResponseEntity<CountOfPostsPerYearResponse> getCountOfPostsPerYear(int year) {
-        List<Post> posts = postsRepository.getCountOfPostsPerYear(year);
-
-        CountOfPostsPerYearResponse countOfPostsPerYearResponse = new PostsMapper().postToCountOfPostsPerYear(posts, year);
-
-        return new ResponseEntity<>(countOfPostsPerYearResponse, HttpStatus.OK);
-    }
-
     private void setViewCountForPost(Post post,
                                      User user) {
-        int viewCount = post.getViewCount();
-
         /**
           Проверим переданного пользователя
           если пользователь не является модератором и не являеться автором поста,
@@ -571,24 +447,17 @@ public class PostsService {
           если пользователь не авторизован (null), то тоже увеличим количество просмотров
          */
 
-        if (user != null) {
-            if (user.getIsModerator() != 1
-                    && user.getId() != post.getUser().getId()) {
-                post.setViewCount(post.getViewCount() + 1);
-            }
-        } else {
-            post.setViewCount(post.getViewCount() + 1);
+        if(user != null && (user.getIsModerator() == 1 || user.getId() == post.getUser().getId())) {
+            return;
         }
 
-        if (viewCount != post.getViewCount()) {
-            postsRepository.save(post);
-        }
-
+        post.setViewCount(post.getViewCount() + 1);
+        postsRepository.save(post);
     }
 
-    private HashMap<String, Object> getUserAndPostAndCheckRelationshipOfUserAndPost(String userEmail,
-                                                                                    int id) {
-        HashMap<String, Object> results = new HashMap<>();
+    private UserAndPostResponse getUserAndPostAndCheckRelationshipOfUserAndPost(String userEmail,
+                                                                                int id) {
+        UserAndPostResponse userAndPost = new UserAndPostResponse();
 
         /**
           Получим пользователя для проверки поста
@@ -611,28 +480,80 @@ public class PostsService {
          */
 
         Post post;
-        if (user != null && user.getIsModerator() == 1) {
+        if (user != null) {
             post = postsRepository.getCertainPostForModerators(id);
-        } else if (user != null && user.getIsModerator() != 1) {
-            post = postsRepository.getCertainPostForModerators(id);
-
-            if (post.getModerationStatus() != ModerationStatus.ACCEPTED) {
-                if (post.getUser() != user) {
-                    post = null;
-                }
+            if (user.getIsModerator() != 1 &&
+                    post.getModerationStatus() != ModerationStatus.ACCEPTED &&
+                    post.getUser() != user) {
+                post = null;
             }
         } else {
             post = postsRepository.getCertainPost(id);
         }
 
+        userAndPost.setPost(post);
+        userAndPost.setUser(user);
 
-        results.put("post", post);
-        if (user != null) {
-            results.put("user", user);
+        return userAndPost;
+    }
+
+    private LocalDateTime dateToLocalDateTime(Date date) {
+        return LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
+    }
+
+    private Date localDateTimeToDate(LocalDateTime localDateTime) {
+        return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
+    }
+
+    private User getRandomModeratorForPostModeration() {
+        /**
+         * Функция находит всех модераторов в базе данных
+         * и возвращает одного случайно выбранного модератора
+         */
+
+        PageRequest pageRequest = PageRequest.of(0, 10);
+        List<User> moderatorList = usersRepository.findModerator(pageRequest);
+
+        int max = moderatorList.size() - 1;
+        int rand = (int) (Math.random() * ++max);
+        return moderatorList.get(rand);
+    }
+
+    private boolean isPremoderationForPostsNeeded(){
+        /**
+         * Функция определяет, требуется ли премодерация новых постов
+         * перед публикаций на главной странице блога
+         */
+
+        GlobalSetting postPremoderation = globalSettingsService.getGlobalSettingForAPIByName("POST_PREMODERATION");
+        boolean needModeration = true;
+
+        if(postPremoderation != null)
+        {
+            if(postPremoderation.getValue().equals("false")) {
+                needModeration = false;
+            }
         }
 
+        return needModeration;
+    }
 
-        return results;
+    public Post editParamsOfPost(EditPostRequest editPostRequest,
+                         Post post,
+                         boolean changeStatus) {
+        if (post == null) {
+            return null;
+        }
+
+        if (changeStatus) {
+            post.setModerationStatus(ModerationStatus.NEW);
+        }
+
+        post.setTime(new Date(editPostRequest.getTimestamp() * 1000));
+        post.setTitle(editPostRequest.getTitle());
+        post.setText(editPostRequest.getText());
+
+        return post;
     }
 }
 

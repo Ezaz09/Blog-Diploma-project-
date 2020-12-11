@@ -11,6 +11,7 @@ import main.model.*;
 import main.model.enums.ModerationStatus;
 import org.springframework.stereotype.Component;
 
+import javax.validation.constraints.NotNull;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -20,12 +21,13 @@ import java.util.List;
 @Component
 public class PostsMapper {
 
-    public List<PostDTO> postToPostResponse(List<Post> posts) {
-        if (posts == null) {
-            return null;
+    public List<PostDTO> postToPostResponse(@NotNull List<Post> posts) {
+        List<PostDTO> list = new ArrayList<>(posts.size());
+
+        if (posts.size() == 0) {
+            return list;
         }
 
-        List<PostDTO> list = new ArrayList<>(posts.size());
         for (Post post1 : posts) {
             list.add(postToPostDTO(post1));
         }
@@ -150,23 +152,7 @@ public class PostsMapper {
         return post;
     }
 
-    public Post editPost(EditPostRequest editPostRequest,
-                         Post post,
-                         boolean changeStatus) {
-        if (post == null) {
-            return null;
-        }
 
-        if (changeStatus) {
-            post.setModerationStatus(ModerationStatus.NEW);
-        }
-
-        post.setTime(new Date(editPostRequest.getTimestamp() * 1000));
-        post.setTitle(editPostRequest.getTitle());
-        post.setText(editPostRequest.getText());
-
-        return post;
-    }
 
     public CountOfPostsPerYearResponse postToCountOfPostsPerYear(List<Post> posts, int year) {
         if (posts == null) {
