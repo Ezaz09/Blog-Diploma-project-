@@ -1,5 +1,7 @@
 package main.controller;
 
+import main.api.DTO.PostRequestDTO;
+import main.api.DTO.PostDTO;
 import main.api.mappers.PostsMapper;
 import main.api.requests.EditPostRequest;
 import main.api.requests.LikeDislikeRequest;
@@ -78,7 +80,16 @@ public class ApiPostController {
             return new ResponseEntity<>(newPostResponse, HttpStatus.OK);
         }
 
-        boolean isNewPostCreated = postsService.addNewPost(postRequest, principal.getName());
+        PostRequestDTO postRequestDTO = postsMapper.newPostRequestToPostRequestDTO(postRequest);
+
+        if(postRequestDTO == null) {
+            mapOfErrors.put("request", "Произошла ошибка при преобразовании запроса");
+            newPostResponse.setResult(false);
+            newPostResponse.setErrors(mapOfErrors);
+            return new ResponseEntity<>(newPostResponse, HttpStatus.OK);
+        }
+
+        boolean isNewPostCreated = postsService.addNewPost(postRequestDTO, principal.getName());
 
         if(isNewPostCreated) {
             newPostResponse.setResult(true);
@@ -88,6 +99,55 @@ public class ApiPostController {
             newPostResponse.setErrors(mapOfErrors);
         }
         return new ResponseEntity<>(newPostResponse, HttpStatus.OK);
+    }
+
+    @PutMapping(path = "/{id}")
+    @PreAuthorize("hasAuthority('user:write')")
+    public ResponseEntity<EditPostResponse> editPost(@PathVariable int id,
+                                                     @RequestBody EditPostRequest editPostRequest,
+                                                     Principal principal) {
+        /**
+         * Форматы ответа
+         * В случае успеха
+         * {
+         * 	"result": true
+         * }
+         * В случае ошибок
+         * {
+         *   "result": false,
+         *   "errors": {
+         *     "title": "Заголовок слишком короткий",
+         *     "text": "Текст публикации слишком короткий"
+         *   }
+         * }
+         */
+
+        HashMap<String, String> mapOfErrors = checkParamsOfPost(editPostRequest.getTitle(),
+                editPostRequest.getText(),
+                principal);
+        EditPostResponse editPostResponse = responseService.createNewEditPostResponse();
+
+        if (!mapOfErrors.isEmpty()) {
+            editPostResponse.setResult(false);
+            editPostResponse.setErrors(mapOfErrors);
+            return new ResponseEntity<>(editPostResponse, HttpStatus.OK);
+        }
+
+        PostRequestDTO postRequestDTO = postsMapper.editPostRequestToPostRequestDTO(editPostRequest);
+
+        if(postRequestDTO == null) {
+            mapOfErrors.put("request", "Произошла ошибка при преобразовании запроса");
+            editPostResponse.setResult(false);
+            editPostResponse.setErrors(mapOfErrors);
+            return new ResponseEntity<>(editPostResponse, HttpStatus.OK);
+        }
+
+        mapOfErrors = postsService.editPost(id, postRequestDTO, principal.getName());
+
+        editPostResponse.setResult(mapOfErrors.isEmpty());
+        editPostResponse.setErrors(mapOfErrors);
+
+        return new ResponseEntity<>(editPostResponse, HttpStatus.OK);
     }
 
     @GetMapping(path = "/search")
@@ -155,45 +215,7 @@ public class ApiPostController {
         return new ResponseEntity<>(certainPostResponse, HttpStatus.OK);
     }
 
-    @PutMapping(path = "/{id}")
-    @PreAuthorize("hasAuthority('user:write')")
-    public ResponseEntity<EditPostResponse> editPost(@PathVariable int id,
-                                                     @RequestBody EditPostRequest editPostRequest,
-                                                     Principal principal) {
-        /**
-         * Форматы ответа
-         * В случае успеха
-         * {
-         * 	"result": true
-         * }
-         * В случае ошибок
-         * {
-         *   "result": false,
-         *   "errors": {
-         *     "title": "Заголовок слишком короткий",
-         *     "text": "Текст публикации слишком короткий"
-         *   }
-         * }
-         */
 
-        HashMap<String, String> mapOfErrors = checkParamsOfPost(editPostRequest.getTitle(),
-                                                                editPostRequest.getText(),
-                                                                principal);
-        EditPostResponse editPostResponse = responseService.createNewEditPostResponse();
-
-        if (!mapOfErrors.isEmpty()) {
-            editPostResponse.setResult(false);
-            editPostResponse.setErrors(mapOfErrors);
-            return new ResponseEntity<>(editPostResponse, HttpStatus.OK);
-        }
-
-        mapOfErrors = postsService.editPost(id, editPostRequest, principal.getName());
-
-        editPostResponse.setResult(mapOfErrors.isEmpty());
-        editPostResponse.setErrors(mapOfErrors);
-
-        return new ResponseEntity<>(editPostResponse, HttpStatus.OK);
-    }
 
     @GetMapping(path = "/my")
     public ResponseEntity<PostResponse> getUserPosts(@RequestParam(defaultValue = "0") int offset,
@@ -227,7 +249,7 @@ public class ApiPostController {
             return getNewLikeDislikeResponse(false);
         }
 
-        boolean isNewLikeSaved = postsService.addNewLikeDislike(likeDislikeRequest, principal.getName(), true);
+        boolean isNewLikeSaved = postsService.addNewLikeDislike(likeDislikeRequest.getPostId(), principal.getName(), true);
 
         return getNewLikeDislikeResponse(isNewLikeSaved);
     }
@@ -245,7 +267,7 @@ public class ApiPostController {
             return getNewLikeDislikeResponse(false);
         }
 
-        boolean isNewDislikeSaved = postsService.addNewLikeDislike(likeDislikeRequest, principal.getName(), false);
+        boolean isNewDislikeSaved = postsService.addNewLikeDislike(likeDislikeRequest.getPostId(), principal.getName(), false);
 
         return getNewLikeDislikeResponse(isNewDislikeSaved);
     }

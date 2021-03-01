@@ -1,6 +1,6 @@
 package main.api.mappers;
 
-import main.api.responses.TagDTO;
+import main.api.DTO.TagDTO;
 import main.model.Post;
 import main.model.Tag;
 import main.model.repositories.PostsRepository;

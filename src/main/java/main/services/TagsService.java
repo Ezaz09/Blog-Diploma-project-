@@ -1,7 +1,7 @@
 package main.services;
 
 import lombok.extern.slf4j.Slf4j;
-import main.api.responses.TagDTO;
+import main.api.DTO.TagDTO;
 import main.api.responses.TagsResponse;
 import main.model.Tag;
 import main.model.Tag2Post;

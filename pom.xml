@@ -16,7 +16,7 @@
 
     <properties>
         <java.version>1.8</java.version>
-        <org.projectlombok.version>1.18.10</org.projectlombok.version>
+        <org.projectlombok.version>1.18.16</org.projectlombok.version>
         <timestamp>${maven.build.timestamp}</timestamp>
         <maven.build.timestamp.format>yyyyMMdd-HHmmssSSS</maven.build.timestamp.format>
         <java-jwt.version>3.9.0</java-jwt.version>

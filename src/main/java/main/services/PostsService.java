@@ -1,11 +1,8 @@
 package main.services;
 
+import main.api.DTO.PostRequestDTO;
 import main.api.mappers.PostsMapper;
-import main.api.requests.EditPostByModeratorRequest;
-import main.api.requests.EditPostRequest;
-import main.api.requests.LikeDislikeRequest;
-import main.api.requests.PostRequest;
-import main.api.responses.UserAndPostResponse;
+import main.api.DTO.UserAndPostDTO;
 import main.model.GlobalSetting;
 import main.model.Post;
 import main.model.PostVote;
@@ -39,6 +36,7 @@ public class PostsService {
     private final TagsService tagsService;
 
     private final GlobalSettingsService globalSettingsService;
+
 
     @Autowired
     public PostsService(PostsRepository postsRepository,
@@ -149,7 +147,7 @@ public class PostsService {
 
         User user;
         Post post;
-        UserAndPostResponse userAndPost = getUserAndPostAndCheckRelationshipOfUserAndPost(userEmail, id);
+        UserAndPostDTO userAndPost = getUserAndPostAndCheckRelationshipOfUserAndPost(userEmail, id);
 
         post = userAndPost.getPost();
         user = userAndPost.getUser();
@@ -238,14 +236,14 @@ public class PostsService {
         return moderatorPosts;
     }
 
-    public boolean addNewPost(PostRequest postRequest,
+    public boolean addNewPost(PostRequestDTO postRequestDTO,
                               String userEmail) {
         /**
          * Функция создает новый пост на основе данных, переданных в postRequest
          * в случае если пост был создан и сохранен, функция возвращает true
          * если произошла ошибка в процессе мэппинга postRequest, функция возвращает false
          * Параметры функции
-         * postRequest - пост из реквеста для добавления в базу данных
+         * postRequestDTO - пост из реквеста для добавления в базу данных
          * userEmail - email пользователя
          */
 
@@ -254,7 +252,7 @@ public class PostsService {
 
         boolean needModeration = isPremoderationForPostsNeeded();
 
-        Post newPost = new PostsMapper().postRequestToPost(postRequest,
+        Post newPost = new PostsMapper().newPostDTOToPost(postRequestDTO,
                 user,
                 moderator,
                 needModeration);
@@ -264,23 +262,23 @@ public class PostsService {
         }
 
         postsRepository.save(newPost);
-        tagsService.setTagsForNewPost(postRequest.getTags(),
+        tagsService.setTagsForNewPost(postRequestDTO.getTags(),
                 newPost.getId());
 
         return true;
     }
 
     public HashMap<String, String> editPost(int id,
-                                            EditPostRequest editPostRequest,
+                                            PostRequestDTO postRequestDTO,
                                             String userEmail) {
         /**
          * Функция находит по переданному id пост в базе данных
          * и в случае если пост был найден,
-         * изменяет параметры поста на те что были переданны в параметре editPostRequest
+         * изменяет параметры поста на те что были переданны в параметре postRequestDTO
          * Возвращает HashMap, который содержит в себе список ошибок, если такие возникли
          * в процессе выполнения кода.
          * Параметры функции
-         * editPostRequest - пост из реквеста для изменения
+         * postRequestDTO - пост из реквеста для изменения
          * userEmail - email пользователя
          */
 
@@ -288,7 +286,7 @@ public class PostsService {
 
         User user;
         Post post;
-        UserAndPostResponse userAndPost = getUserAndPostAndCheckRelationshipOfUserAndPost(userEmail, id);
+        UserAndPostDTO userAndPost = getUserAndPostAndCheckRelationshipOfUserAndPost(userEmail, id);
 
         post = userAndPost.getPost();
         user = userAndPost.getUser();
@@ -304,12 +302,12 @@ public class PostsService {
         assert user != null;
         changeStatus = user.getIsModerator() != 1;
 
-        post = editParamsOfPost(editPostRequest,
+        post = editParamsOfPost(postRequestDTO,
                 post,
                 changeStatus);
 
         postsRepository.save(post);
-        tagsService.setTagsForEditingPost(editPostRequest.getTags(),
+        tagsService.setTagsForEditingPost(postRequestDTO.getTags(),
                 post.getTags2Post(),
                 post.getId());
 
@@ -317,33 +315,44 @@ public class PostsService {
     }
 
 
-    public HashMap<String, String>  editPostByModerator(EditPostByModeratorRequest editPostByModeratorRequest,
-                                      User moderator) {
+    public HashMap<String, String>  editPostByModerator(int postId,
+                                                        String decision,
+                                                        User moderator) {
         /**
          * Функция получает запрос на изменение решения по посту и пользователя
          * проверяет, является ли переданный пользователь модератором
          * и меняет статус модерации у поста
          * Параметры функции
-         * editPostByModeratorRequest - запрос на изменение решения по посту
+         * postId - id поста, по которому было изменено решение модератора,
+         * decision - решение, которое было принято модератором,
          * moderator - модератор
          */
         HashMap<String, String> mapOfErrors = new HashMap<>();
 
-        if(moderator.getIsModerator() == 0) {
+        if (postId == 0 ||
+                decision.equals("")) {
+            mapOfErrors.put("params", "Переданы неверные параметры!");
+        }
+
+        if (moderator.getIsModerator() == 0) {
             mapOfErrors.put("auth", "Пользователь не являеться модератором!");
+
+        }
+
+        if (!mapOfErrors.isEmpty()) {
             return mapOfErrors;
         }
 
-        Post post = postsRepository.getCertainPostForModerators(editPostByModeratorRequest.getPostId());
+        Post post = postsRepository.getCertainPostForModerators(postId);
 
         if (post == null) {
             mapOfErrors.put("post", "Запрошенный пост не был найден!");
             return mapOfErrors;
         }
 
-        if (editPostByModeratorRequest.getDecision().equals("accept")) {
+        if (decision.equals("accept")) {
             post.setModerationStatus(ModerationStatus.ACCEPTED);
-        } else if (editPostByModeratorRequest.getDecision().equals("decline")) {
+        } else if (decision.equals("decline")) {
             post.setModerationStatus(ModerationStatus.DECLINED);
         } else {
             mapOfErrors.put("decision", "Переданное решение по посту не распознано!");
@@ -360,15 +369,15 @@ public class PostsService {
         return postsRepository.getCountOfPostsPerYear(year);
     }
 
-    public boolean addNewLikeDislike(LikeDislikeRequest likeDislikeRequest,
-                              String userEmail,
-                              boolean likeDislike) {
+    public boolean addNewLikeDislike(int postId,
+                                     String userEmail,
+                                     boolean likeDislike) {
         /**
          * Функция создает новый лайк/дизлайк, взависимости от параметра likeDislike
-         * для поста, переданного в параметре likeDislikeRequest, или заменяет существующий
+         * для поста, id которого передается в параметре postId, или заменяет существующий
          * лайк на дизлайк в базе данных и наоборот
          * Параметры функции
-         * likeDislikeRequest - пост для которого нужно проставить лайк/дизлайк
+         * postId - id поста для которого нужно проставить лайк/дизлайк
          * userEmail - email пользователя
          * likeDislike - лайк(true) или дизлайк(false)
          */
@@ -379,7 +388,7 @@ public class PostsService {
             return false;
         }
 
-        Post certainPost = postsRepository.getCertainPost(likeDislikeRequest.getPostId());
+        Post certainPost = postsRepository.getCertainPost(postId);
 
         if (certainPost == null) {
             return false;
@@ -405,7 +414,7 @@ public class PostsService {
                 return true;
             }
            return false;
-        } else if (postVoteByUserId.getValue() == -1){
+        } else if (postVoteByUserId.getValue() == -1) {
             if(likeDislike) {
                 changeParamOfPostVote(postVoteByUserId, 1);
                 return true;
@@ -455,9 +464,9 @@ public class PostsService {
         postsRepository.save(post);
     }
 
-    private UserAndPostResponse getUserAndPostAndCheckRelationshipOfUserAndPost(String userEmail,
-                                                                                int id) {
-        UserAndPostResponse userAndPost = new UserAndPostResponse();
+    private UserAndPostDTO getUserAndPostAndCheckRelationshipOfUserAndPost(String userEmail,
+                                                                           int id) {
+        UserAndPostDTO userAndPost = new UserAndPostDTO();
 
         /**
           Получим пользователя для проверки поста
@@ -538,9 +547,9 @@ public class PostsService {
         return needModeration;
     }
 
-    public Post editParamsOfPost(EditPostRequest editPostRequest,
-                         Post post,
-                         boolean changeStatus) {
+    public Post editParamsOfPost(PostRequestDTO postRequestDTO,
+                                 Post post,
+                                 boolean changeStatus) {
         if (post == null) {
             return null;
         }
@@ -549,9 +558,9 @@ public class PostsService {
             post.setModerationStatus(ModerationStatus.NEW);
         }
 
-        post.setTime(new Date(editPostRequest.getTimestamp() * 1000));
-        post.setTitle(editPostRequest.getTitle());
-        post.setText(editPostRequest.getText());
+        post.setTime(new Date(postRequestDTO.getTimestamp() * 1000));
+        post.setTitle(postRequestDTO.getTitle());
+        post.setText(postRequestDTO.getText());
 
         return post;
     }

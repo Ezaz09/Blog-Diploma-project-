@@ -1,11 +1,12 @@
 package main.api.mappers;
 
+import main.api.DTO.PostRequestDTO;
 import main.api.requests.EditPostRequest;
 import main.api.requests.PostRequest;
 import main.api.responses.CommentResponse;
 import main.api.responses.post_responses.CertainPostResponse;
 import main.api.responses.post_responses.CountOfPostsPerYearResponse;
-import main.api.responses.post_responses.PostDTO;
+import main.api.DTO.PostDTO;
 import main.api.responses.user_response.UserResponse;
 import main.model.*;
 import main.model.enums.ModerationStatus;
@@ -124,17 +125,17 @@ public class PostsMapper {
         return commentResponse;
     }
 
-    public Post postRequestToPost(PostRequest postRequest,
-                                  User user,
-                                  User moderator,
-                                  boolean needModeration) {
-        if (postRequest == null) {
+    public Post newPostDTOToPost(PostRequestDTO postRequestDTO,
+                                 User user,
+                                 User moderator,
+                                 boolean needModeration) {
+        if (postRequestDTO == null) {
             return null;
         }
 
         Post post = new Post();
 
-        post.setIsActive(postRequest.getActive());
+        post.setIsActive(postRequestDTO.getActive());
 
         if(user.getIsModerator() == 0 && needModeration) {
             post.setModerationStatus(ModerationStatus.NEW);
@@ -144,15 +145,41 @@ public class PostsMapper {
 
         post.setModerator(moderator);
         post.setUser(user);
-        post.setTime(new Date(postRequest.getTimestamp() * 1000));
-        post.setTitle(postRequest.getTitle());
-        post.setText(postRequest.getText());
+        post.setTime(new Date(postRequestDTO.getTimestamp() * 1000));
+        post.setTitle(postRequestDTO.getTitle());
+        post.setText(postRequestDTO.getText());
         post.setViewCount(0);
 
         return post;
     }
 
+    public PostRequestDTO newPostRequestToPostRequestDTO(PostRequest postRequest) {
+        if (postRequest == null) {
+            return null;
+        }
 
+        return postRequestToPostRequestDTO(postRequest);
+    }
+
+    public PostRequestDTO editPostRequestToPostRequestDTO(EditPostRequest editPostRequest) {
+        if (editPostRequest == null) {
+            return null;
+        }
+
+        return postRequestToPostRequestDTO(editPostRequest);
+    }
+
+    private PostRequestDTO postRequestToPostRequestDTO(PostRequest postRequest) {
+        PostRequestDTO postRequestDTO = new PostRequestDTO();
+
+        postRequestDTO.setTimestamp(postRequest.getTimestamp());
+        postRequestDTO.setActive(postRequest.getActive());
+        postRequestDTO.setTitle(postRequest.getTitle());
+        postRequestDTO.setTags(postRequest.getTags());
+        postRequestDTO.setText(postRequest.getText());
+
+        return postRequestDTO;
+    }
 
     public CountOfPostsPerYearResponse postToCountOfPostsPerYear(List<Post> posts, int year) {
         if (posts == null) {

@@ -3,7 +3,7 @@ package main.controller;
 import main.api.mappers.PostsMapper;
 import main.api.requests.EditPostByModeratorRequest;
 import main.api.responses.post_responses.EditPostByModeratorResponse;
-import main.api.responses.post_responses.PostDTO;
+import main.api.DTO.PostDTO;
 import main.api.responses.post_responses.PostResponse;
 import main.model.Post;
 import main.model.User;
@@ -75,7 +75,9 @@ public class ApiModeratorController {
             return new ResponseEntity<>(editPostByModeratorResponse, HttpStatus.OK);
         }
 
-        HashMap<String, String> mapOfErrors = postsService.editPostByModerator(editPostByModeratorRequest, user);
+        HashMap<String, String> mapOfErrors = postsService.editPostByModerator(editPostByModeratorRequest.getPostId(),
+                                                                               editPostByModeratorRequest.getDecision(),
+                                                                               user);
 
         if(!mapOfErrors.isEmpty()) {
            editPostByModeratorResponse.setResult(false);

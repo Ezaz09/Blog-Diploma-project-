@@ -2,6 +2,8 @@ package main.api.responses;
 
 import lombok.Builder;
 import lombok.Data;
+import main.api.DTO.TagDTO;
+
 import java.util.List;
 
 @Data
