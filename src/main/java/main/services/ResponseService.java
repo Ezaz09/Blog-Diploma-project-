@@ -1,6 +1,7 @@
 package main.services;
 
 import main.api.responses.LikeDislikeResponse;
+import main.api.responses.NewCommentResponse;
 import main.api.responses.post_responses.EditPostByModeratorResponse;
 import main.api.responses.post_responses.EditPostResponse;
 import main.api.responses.post_responses.NewPostResponse;
@@ -29,6 +30,15 @@ public class ResponseService {
         editPostResponse.setErrors(new HashMap<>());
 
         return editPostResponse;
+    }
+
+    public NewCommentResponse createNewCommentResponse() {
+        NewCommentResponse newCommentResponse = new NewCommentResponse();
+        newCommentResponse.setId(0);
+        newCommentResponse.setResult(true);
+        newCommentResponse.setErrors(new HashMap<>());
+
+        return newCommentResponse;
     }
 
     public LikeDislikeResponse createNewLikeDislikeResponse() {
