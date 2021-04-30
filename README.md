@@ -31,4 +31,4 @@ I'm using for this gmail, so if you wanna used for this something else, don't fo
 - Change in "application.properties" parameter "spring.profiles.active" from prod to dev, if it's needed.
 
 # Link to deploy 
-https://blog-diploma-project.herokuapp.com/posts/recent
+https://blog-diploma-project.herokuapp.com
